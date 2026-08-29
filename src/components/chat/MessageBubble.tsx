@@ -17,10 +17,10 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
     >
       {/* Avatar */}
       <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
+        className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 shadow-lg ${
           isAssistant
-            ? 'bg-blue-600 text-white'
-            : 'bg-slate-700 text-white'
+            ? 'bg-blue-500/25 border border-blue-400/30 text-blue-300 shadow-blue-500/20'
+            : 'bg-indigo-600 text-white shadow-indigo-600/30'
         }`}
       >
         {isAssistant ? <Bot size={18} /> : <User size={18} />}
@@ -34,17 +34,19 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
       >
         {/* Author Label & Time */}
         <div className="flex items-center gap-2 mb-1 px-1 text-[11px] text-slate-400 font-medium">
-          <span>{isAssistant ? 'WeatherGPT' : 'You'}</span>
+          <span className={isAssistant ? 'text-blue-300 font-semibold' : 'text-slate-300'}>
+            {isAssistant ? 'WeatherGPT AI' : 'You'}
+          </span>
           <span>•</span>
           <span>{formatTime(message.timestamp)}</span>
         </div>
 
         {/* Message Content */}
         <div
-          className={`p-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-line shadow-xs ${
+          className={`p-4 rounded-3xl text-sm leading-relaxed whitespace-pre-line shadow-md ${
             isAssistant
-              ? 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm'
-              : 'bg-blue-600 text-white rounded-tr-sm'
+              ? 'glass-panel text-slate-100 rounded-tl-xs border border-white/10'
+              : 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tr-xs shadow-blue-500/20 border border-blue-400/30'
           }`}
         >
           {message.content}

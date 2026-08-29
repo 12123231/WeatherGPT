@@ -34,36 +34,36 @@ export default function MapView({
 
   return (
     <div
-      className={`bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs flex flex-col ${className}`}
+      className={`glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex flex-col ${className}`}
     >
       {/* Map Control Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 border-b border-slate-200 bg-slate-50/70">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5 border-b border-white/10 bg-slate-950/40">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-400/30 flex items-center justify-center shadow-inner">
             <Radio size={16} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900">
-              Doppler Radar & Geo-Intelligence
+            <h3 className="text-sm font-extrabold text-white">
+              Doppler Radar & Spatial Matrix
             </h3>
-            <p className="text-[11px] text-slate-500">
-              Station Coordinates: {location.lat.toFixed(4)}°N, {location.lon.toFixed(4)}°E
+            <p className="text-[11px] text-slate-400">
+              Coordinates: {location.lat.toFixed(4)}°N, {location.lon.toFixed(4)}°E
             </p>
           </div>
         </div>
 
         {/* Map Layer Selector */}
-        <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 text-xs">
-          <Layers size={13} className="text-slate-400 ml-1.5 mr-0.5" />
+        <div className="flex items-center gap-1 glass-pill p-1 rounded-2xl text-xs">
+          <Layers size={13} className="text-slate-400 ml-2 mr-0.5" />
           {(['radar', 'temperature', 'precipitation', 'wind'] as MapLayer[]).map((layer) => (
             <button
               key={layer}
               type="button"
               onClick={() => setActiveLayer(layer)}
-              className={`px-2.5 py-1 rounded-lg font-medium capitalize transition-all ${
+              className={`px-3 py-1 rounded-xl font-semibold capitalize transition-all cursor-pointer ${
                 activeLayer === layer
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.06]'
               }`}
             >
               {layer}
@@ -73,10 +73,10 @@ export default function MapView({
       </div>
 
       {/* Map Interactive Canvas Visual Area */}
-      <div className="relative flex-1 min-h-[380px] bg-slate-900 overflow-hidden flex items-center justify-center select-none">
+      <div className="relative flex-1 min-h-[380px] bg-slate-950 overflow-hidden flex items-center justify-center select-none">
         {/* Synthetic Map Background Grid & Radar rings */}
         <div
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-25"
           style={{
             backgroundImage: `radial-gradient(#3b82f6 1px, transparent 1px), linear-gradient(to right, #1e293b 1px, transparent 1px), linear-gradient(to bottom, #1e293b 1px, transparent 1px)`,
             backgroundSize: '24px 24px, 48px 48px, 48px 48px',
@@ -102,13 +102,13 @@ export default function MapView({
         <div className="relative z-10 flex flex-col items-center">
           <div className="relative flex items-center justify-center">
             <span className="animate-ping absolute inline-flex h-10 w-10 rounded-full bg-blue-400 opacity-60" />
-            <div className="relative w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/50 border-2 border-white">
+            <div className="relative w-9 h-9 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/50 border border-blue-300">
               <MapPin size={18} />
             </div>
           </div>
 
           {/* Location Pin Badge */}
-          <div className="mt-2 bg-slate-900/90 backdrop-blur-md text-white px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-lg text-center">
+          <div className="mt-2.5 glass-panel text-white px-3.5 py-1.5 rounded-2xl border border-white/15 shadow-xl text-center backdrop-blur-xl">
             <p className="text-xs font-bold leading-tight">{location.name}</p>
             <p className="text-[10px] text-slate-300">
               {location.region}, {location.country}
@@ -118,8 +118,8 @@ export default function MapView({
 
         {/* Top-Right Weather Telemetry Overlay */}
         {weather && (
-          <div className="absolute top-4 right-4 z-20 bg-slate-900/85 backdrop-blur-md border border-slate-700/80 rounded-xl p-3 text-white shadow-xl max-w-[200px]">
-            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-700/60">
+          <div className="absolute top-4 right-4 z-20 glass-panel border border-white/15 rounded-2xl p-3.5 text-white shadow-2xl max-w-[210px] backdrop-blur-2xl">
+            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/10">
               {WeatherIcon && <WeatherIcon size={20} className="text-blue-400 shrink-0" />}
               <div>
                 <span className="text-base font-extrabold">{formatTemp(weather.temperature)}</span>
@@ -147,10 +147,10 @@ export default function MapView({
         )}
 
         {/* Bottom-Left Layer Legend */}
-        <div className="absolute bottom-4 left-4 z-20 bg-slate-900/85 backdrop-blur-md border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-white text-[10px]">
+        <div className="absolute bottom-4 left-4 z-20 glass-panel border border-white/15 rounded-xl px-3 py-1.5 text-white text-[10px]">
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-            <span className="capitalize font-semibold">{activeLayer} Active</span>
+            <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+            <span className="capitalize font-bold">{activeLayer} Active</span>
             <span className="text-slate-400">| Zoom {zoomLevel}x</span>
           </div>
         </div>
@@ -161,7 +161,7 @@ export default function MapView({
             type="button"
             onClick={() => setZoomLevel((z) => Math.min(z + 1, 16))}
             aria-label="Zoom in"
-            className="w-8 h-8 rounded-lg bg-slate-800/90 text-white hover:bg-slate-700 border border-slate-700 flex items-center justify-center transition-colors shadow-md"
+            className="w-8 h-8 rounded-xl glass-pill text-white hover:bg-white/[0.15] flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer"
           >
             <ZoomIn size={15} />
           </button>
@@ -169,21 +169,21 @@ export default function MapView({
             type="button"
             onClick={() => setZoomLevel((z) => Math.max(z - 1, 2))}
             aria-label="Zoom out"
-            className="w-8 h-8 rounded-lg bg-slate-800/90 text-white hover:bg-slate-700 border border-slate-700 flex items-center justify-center transition-colors shadow-md"
+            className="w-8 h-8 rounded-xl glass-pill text-white hover:bg-white/[0.15] flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer"
           >
             <ZoomOut size={15} />
           </button>
           <button
             type="button"
             aria-label="Toggle compass orientation"
-            className="w-8 h-8 rounded-lg bg-slate-800/90 text-white hover:bg-slate-700 border border-slate-700 flex items-center justify-center transition-colors shadow-md"
+            className="w-8 h-8 rounded-xl glass-pill text-white hover:bg-white/[0.15] flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer"
           >
             <Compass size={15} />
           </button>
           <button
             type="button"
             aria-label="Toggle full map"
-            className="w-8 h-8 rounded-lg bg-slate-800/90 text-white hover:bg-slate-700 border border-slate-700 flex items-center justify-center transition-colors shadow-md"
+            className="w-8 h-8 rounded-xl glass-pill text-white hover:bg-white/[0.15] flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer"
           >
             <Maximize2 size={15} />
           </button>
@@ -191,9 +191,9 @@ export default function MapView({
       </div>
 
       {/* Footer Note */}
-      <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+      <div className="px-5 py-3 bg-slate-950/50 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
         <span>Integrated Doppler Weather Radar Matrix</span>
-        <span className="text-slate-400">Ready for GIS / GeoJSON Layer Integration</span>
+        <span className="text-slate-400 font-medium">Ready for GIS / GeoJSON Layer Integration</span>
       </div>
     </div>
   );

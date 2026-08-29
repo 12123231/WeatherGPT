@@ -89,11 +89,11 @@ export default function VoiceInput({
       disabled={disabled}
       aria-label={isListening ? 'Stop voice recording' : 'Start voice input'}
       title={isListening ? 'Listening... click to stop' : 'Voice input'}
-      className={`relative p-2.5 rounded-xl transition-all flex items-center justify-center shrink-0 ${
+      className={`relative p-3 rounded-2xl transition-all duration-200 flex items-center justify-center shrink-0 ${
         isListening
-          ? 'bg-red-500 text-white animate-pulse shadow-md shadow-red-500/20'
-          : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
-      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
+          ? 'bg-rose-500 text-white animate-pulse shadow-lg shadow-rose-500/30'
+          : 'glass-pill text-slate-300 hover:text-white hover:bg-white/[0.12]'
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'} ${className}`}
     >
       {isListening ? (
         <>

@@ -15,23 +15,26 @@ export default function ErrorState({
 }: ErrorStateProps) {
   return (
     <div
-      className={`flex flex-col items-center justify-center p-8 rounded-xl bg-red-50/50 border border-red-200 text-center ${className}`}
+      className={`flex flex-col items-center justify-center p-10 rounded-3xl glass-panel text-center border-rose-500/30 relative overflow-hidden ${className}`}
       role="alert"
     >
-      <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-3">
-        <AlertCircle size={22} />
+      <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative z-10 flex flex-col items-center">
+        <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-rose-400 mb-4 shadow-lg shadow-rose-500/20">
+          <AlertCircle size={24} />
+        </div>
+        <h3 className="text-sm font-extrabold text-white">{title}</h3>
+        <p className="text-xs text-slate-300 mt-1.5 max-w-sm leading-relaxed">{message}</p>
+        {onRetry && (
+          <button
+            onClick={onRetry}
+            className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-400/30 transition-all shadow-sm active:scale-95 cursor-pointer"
+          >
+            <RotateCcw size={13} />
+            Retry Connection
+          </button>
+        )}
       </div>
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-      <p className="text-xs text-slate-600 mt-1 max-w-sm">{message}</p>
-      {onRetry && (
-        <button
-          onClick={onRetry}
-          className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-colors shadow-xs"
-        >
-          <RotateCcw size={13} />
-          Retry Connection
-        </button>
-      )}
     </div>
   );
 }

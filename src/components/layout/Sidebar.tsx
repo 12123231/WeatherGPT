@@ -1,5 +1,5 @@
-﻿import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, Calendar, AlertTriangle, Map, Settings, CloudSun } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { LayoutDashboard, MessageSquare, Calendar, AlertTriangle, Map, Settings, CloudSun, Sparkles } from 'lucide-react';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard',   icon: LayoutDashboard },
@@ -12,47 +12,64 @@ const navItems = [
 
 export default function Sidebar() {
   return (
-    <aside
-      className="hidden lg:flex lg:flex-col lg:w-20 xl:w-60 h-screen sticky top-0 z-20"
-      style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRight: '1px solid rgba(255,255,255,0.08)' }}
-    >
-      <div className="flex items-center gap-3 px-4 xl:px-6 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0" style={{ background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(99,179,237,0.3)', color: '#93c5fd' }}>
-          <CloudSun size={20} />
+    <aside className="hidden lg:flex lg:flex-col lg:w-20 xl:w-64 h-screen sticky top-0 z-20 bg-slate-950/60 backdrop-blur-2xl border-r border-white/10 shadow-2xl">
+      {/* Brand Header */}
+      <div className="flex items-center gap-3 px-4 xl:px-6 py-5 border-b border-white/10">
+        <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500/25 to-indigo-600/25 border border-blue-400/30 text-blue-400 shrink-0 shadow-lg shadow-blue-500/10">
+          <CloudSun size={22} />
         </div>
         <div className="hidden xl:block">
-          <h1 className="text-base font-bold text-white leading-tight">WeatherGPT</h1>
-          <p className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.45)' }}>AI Weather Intelligence</p>
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-base font-extrabold text-white tracking-tight leading-tight">WeatherGPT</h1>
+            <span className="flex items-center gap-0.5 text-[9px] font-bold text-blue-300 bg-blue-500/20 px-1.5 py-0.2 rounded-full border border-blue-400/30">
+              <Sparkles size={8} /> v2.0
+            </span>
+          </div>
+          <p className="text-[11px] font-medium text-slate-400">AI Weather Intelligence</p>
         </div>
       </div>
 
-      <nav className="flex-1 px-2 xl:px-3 py-4 space-y-1 overflow-y-auto" aria-label="Main navigation">
+      {/* Navigation Links */}
+      <nav className="flex-1 px-2 xl:px-3 py-5 space-y-1.5 overflow-y-auto" aria-label="Main navigation">
         {navItems.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 justify-center xl:justify-start ${
-                isActive ? 'text-blue-300' : 'hover:text-white/80'
+              `flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all duration-200 justify-center xl:justify-start group ${
+                isActive
+                  ? 'bg-blue-500/20 text-white border border-blue-400/35 shadow-lg shadow-blue-500/10 backdrop-blur-md'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] border border-transparent'
               }`
             }
-            style={({ isActive }) => isActive
-              ? { background: 'rgba(59,130,246,0.18)', border: '1px solid rgba(99,179,237,0.25)', color: '#93c5fd' }
-              : { border: '1px solid transparent', color: 'rgba(255,255,255,0.5)' }
-            }
           >
-            <Icon size={18} className="shrink-0" />
-            <span className="hidden xl:inline">{label}</span>
+            {({ isActive }) => (
+              <>
+                <Icon
+                  size={19}
+                  className={`shrink-0 transition-transform duration-200 group-hover:scale-110 ${
+                    isActive ? 'text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]' : 'text-slate-400'
+                  }`}
+                />
+                <span className="hidden xl:inline">{label}</span>
+                {isActive && (
+                  <span className="hidden xl:block ml-auto w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_6px_#60a5fa]" />
+                )}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
 
-      <div className="px-3 xl:px-6 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* Bottom Footer Status */}
+      <div className="px-3 xl:px-6 py-4 border-t border-white/10">
         <div className="hidden xl:flex items-center justify-between text-xs">
-          <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>SIH 2026</span>
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(59,130,246,0.2)', color: '#93c5fd', border: '1px solid rgba(99,179,237,0.25)' }}>MVP</span>
+          <span className="font-semibold text-slate-400">SIH 2026 Engine</span>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+            ONLINE
+          </span>
         </div>
-        <p className="hidden xl:block text-[11px] mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Prototype Interface</p>
+        <p className="hidden xl:block text-[11px] mt-1 text-slate-400">Atmospheric Telemetry Active</p>
       </div>
     </aside>
   );

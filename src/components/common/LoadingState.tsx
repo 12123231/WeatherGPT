@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 
 interface LoadingStateProps {
   message?: string;
@@ -11,13 +11,21 @@ export default function LoadingState({
 }: LoadingStateProps) {
   return (
     <div
-      className={`flex flex-col items-center justify-center p-8 rounded-xl bg-white border border-slate-200 text-center ${className}`}
+      className={`flex flex-col items-center justify-center p-10 rounded-3xl glass-panel text-center relative overflow-hidden ${className}`}
       role="status"
       aria-live="polite"
     >
-      <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-3" />
-      <p className="text-sm font-medium text-slate-700">{message}</p>
-      <p className="text-xs text-slate-400 mt-1">Fetching telemetry and risk metrics</p>
+      <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative z-10 flex flex-col items-center">
+        <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400 mb-4 shadow-lg shadow-blue-500/20">
+          <Loader2 className="w-6 h-6 animate-spin" />
+        </div>
+        <p className="text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
+          <Sparkles size={13} className="text-blue-400" />
+          {message}
+        </p>
+        <p className="text-xs text-slate-400 mt-1">Synchronizing meteorological telemetry matrix</p>
+      </div>
     </div>
   );
 }

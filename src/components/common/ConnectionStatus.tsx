@@ -18,12 +18,12 @@ export default function ConnectionStatus({
 
   return (
     <div
-      className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-md transition-all duration-200 ${
         isOnline
-          ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+          ? 'bg-emerald-500/15 border-emerald-400/30 text-emerald-300 shadow-sm shadow-emerald-500/10'
           : isSyncing
-          ? 'bg-blue-50 border-blue-200 text-blue-700'
-          : 'bg-amber-50 border-amber-200 text-amber-700'
+          ? 'bg-blue-500/15 border-blue-400/30 text-blue-300 shadow-sm shadow-blue-500/10'
+          : 'bg-amber-500/15 border-amber-400/30 text-amber-300 shadow-sm shadow-amber-500/10'
       } ${className}`}
       title={
         isOnline
@@ -41,24 +41,24 @@ export default function ConnectionStatus({
         />
         <span
           className={`relative inline-flex rounded-full h-2 w-2 ${
-            isOnline ? 'bg-emerald-500' : isSyncing ? 'bg-blue-500' : 'bg-amber-500'
+            isOnline ? 'bg-emerald-400' : isSyncing ? 'bg-blue-400' : 'bg-amber-400'
           }`}
         />
       </span>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         {isOnline ? (
-          <Wifi size={12} className="shrink-0" />
+          <Wifi size={12} className="shrink-0 text-emerald-400" />
         ) : isSyncing ? (
-          <RefreshCw size={12} className="shrink-0 animate-spin" />
+          <RefreshCw size={12} className="shrink-0 animate-spin text-blue-400" />
         ) : (
-          <WifiOff size={12} className="shrink-0" />
+          <WifiOff size={12} className="shrink-0 text-amber-400" />
         )}
         <span className="capitalize">{status}</span>
       </div>
 
       {lastSynced && (
-        <span className="text-[11px] opacity-75 border-l border-current/20 pl-1.5 hidden sm:inline">
+        <span className="text-[10px] text-slate-300 border-l border-white/20 pl-1.5 hidden sm:inline">
           {isOnline ? 'Synced' : 'Cached'}: {formatLastUpdated(lastSynced)}
         </span>
       )}
