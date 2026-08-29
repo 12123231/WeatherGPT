@@ -17,13 +17,13 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
     >
       {/* Avatar */}
       <div
-        className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 shadow-lg ${
+        className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
           isAssistant
-            ? 'bg-blue-500/25 border border-blue-400/30 text-blue-300 shadow-blue-500/20'
-            : 'bg-indigo-600 text-white shadow-indigo-600/30'
+            ? 'bg-white/[0.04] border border-white/[0.08] text-sky-400'
+            : 'bg-sky-600 text-white'
         }`}
       >
-        {isAssistant ? <Bot size={18} /> : <User size={18} />}
+        {isAssistant ? <Bot size={15} /> : <User size={15} />}
       </div>
 
       {/* Bubble Container */}
@@ -34,8 +34,8 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
       >
         {/* Author Label & Time */}
         <div className="flex items-center gap-2 mb-1 px-1 text-[11px] text-slate-400 font-medium">
-          <span className={isAssistant ? 'text-blue-300 font-semibold' : 'text-slate-300'}>
-            {isAssistant ? 'WeatherGPT AI' : 'You'}
+          <span className={isAssistant ? 'text-sky-300 font-semibold' : 'text-slate-300'}>
+            {isAssistant ? 'WeatherGPT' : 'You'}
           </span>
           <span>•</span>
           <span>{formatTime(message.timestamp)}</span>
@@ -43,10 +43,10 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
 
         {/* Message Content */}
         <div
-          className={`p-4 rounded-3xl text-sm leading-relaxed whitespace-pre-line shadow-md ${
+          className={`p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-line ${
             isAssistant
-              ? 'glass-panel text-slate-100 rounded-tl-xs border border-white/10'
-              : 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tr-xs shadow-blue-500/20 border border-blue-400/30'
+              ? 'bg-white/[0.035] text-slate-100 border border-white/[0.06]'
+              : 'bg-sky-600 text-white'
           }`}
         >
           {message.content}

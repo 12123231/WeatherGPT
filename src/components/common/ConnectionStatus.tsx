@@ -18,48 +18,43 @@ export default function ConnectionStatus({
 
   return (
     <div
-      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-md transition-all duration-200 ${
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border backdrop-blur-md transition-colors ${
         isOnline
-          ? 'bg-emerald-500/15 border-emerald-400/30 text-emerald-300 shadow-sm shadow-emerald-500/10'
+          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
           : isSyncing
-          ? 'bg-blue-500/15 border-blue-400/30 text-blue-300 shadow-sm shadow-blue-500/10'
-          : 'bg-amber-500/15 border-amber-400/30 text-amber-300 shadow-sm shadow-amber-500/10'
+          ? 'bg-sky-500/10 border-sky-500/20 text-sky-400'
+          : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
       } ${className}`}
       title={
         isOnline
-          ? 'Connected to live weather network'
+          ? 'Connected to live telemetry network'
           : isSyncing
-          ? 'Synchronizing weather updates...'
-          : 'Offline mode: displaying cached forecast data'
+          ? 'Synchronizing meteorological data...'
+          : 'Offline mode: displaying cached forecast'
       }
     >
-      <span className="relative flex h-2 w-2">
+      <span className="relative flex h-1.5 w-1.5">
         <span
-          className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-            isOnline ? 'bg-emerald-400' : isSyncing ? 'bg-blue-400' : 'bg-amber-400'
-          }`}
-        />
-        <span
-          className={`relative inline-flex rounded-full h-2 w-2 ${
-            isOnline ? 'bg-emerald-400' : isSyncing ? 'bg-blue-400' : 'bg-amber-400'
+          className={`relative inline-flex rounded-full h-1.5 w-1.5 ${
+            isOnline ? 'bg-emerald-400' : isSyncing ? 'bg-sky-400' : 'bg-amber-400'
           }`}
         />
       </span>
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         {isOnline ? (
-          <Wifi size={12} className="shrink-0 text-emerald-400" />
+          <Wifi size={11} className="shrink-0 text-emerald-400" />
         ) : isSyncing ? (
-          <RefreshCw size={12} className="shrink-0 animate-spin text-blue-400" />
+          <RefreshCw size={11} className="shrink-0 animate-spin text-sky-400" />
         ) : (
-          <WifiOff size={12} className="shrink-0 text-amber-400" />
+          <WifiOff size={11} className="shrink-0 text-amber-400" />
         )}
-        <span className="capitalize">{status}</span>
+        <span className="capitalize text-[11px]">{status}</span>
       </div>
 
       {lastSynced && (
-        <span className="text-[10px] text-slate-300 border-l border-white/20 pl-1.5 hidden sm:inline">
-          {isOnline ? 'Synced' : 'Cached'}: {formatLastUpdated(lastSynced)}
+        <span className="text-[10px] text-slate-400 border-l border-white/[0.1] pl-1.5 hidden sm:inline">
+          {formatLastUpdated(lastSynced)}
         </span>
       )}
     </div>

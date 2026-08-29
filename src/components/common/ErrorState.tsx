@@ -15,22 +15,21 @@ export default function ErrorState({
 }: ErrorStateProps) {
   return (
     <div
-      className={`flex flex-col items-center justify-center p-10 rounded-3xl glass-panel text-center border-rose-500/30 relative overflow-hidden ${className}`}
+      className={`flex flex-col items-center justify-center p-10 rounded-2xl glass-panel text-center border-rose-500/20 ${className}`}
       role="alert"
     >
-      <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="relative z-10 flex flex-col items-center">
-        <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-rose-400 mb-4 shadow-lg shadow-rose-500/20">
-          <AlertCircle size={24} />
+      <div className="flex flex-col items-center">
+        <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-rose-500/30 flex items-center justify-center text-rose-400 mb-3">
+          <AlertCircle size={20} />
         </div>
-        <h3 className="text-sm font-extrabold text-white">{title}</h3>
-        <p className="text-xs text-slate-300 mt-1.5 max-w-sm leading-relaxed">{message}</p>
+        <h3 className="text-sm font-bold text-white">{title}</h3>
+        <p className="text-xs text-slate-300 mt-1 max-w-sm leading-relaxed">{message}</p>
         {onRetry && (
           <button
             onClick={onRetry}
-            className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-400/30 transition-all shadow-sm active:scale-95 cursor-pointer"
+            className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white/[0.04] hover:bg-white/[0.08] text-rose-300 border border-rose-500/30 transition-colors cursor-pointer"
           >
-            <RotateCcw size={13} />
+            <RotateCcw size={12} />
             Retry Connection
           </button>
         )}

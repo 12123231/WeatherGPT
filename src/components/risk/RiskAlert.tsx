@@ -1,5 +1,5 @@
 import type { WeatherRisk } from '../../types/weather';
-import { getWeatherIcon } from '../../utils/weatherIcons';
+import { WeatherIcon } from '../../utils/weatherIcons';
 import { capitalize } from '../../utils/formatters';
 import { Clock, ShieldAlert, CheckCircle2 } from 'lucide-react';
 
@@ -14,69 +14,57 @@ export default function RiskAlert({
   locationName,
   className = '',
 }: RiskAlertProps) {
-  const Icon = getWeatherIcon(risk.icon);
-
-  // Severity dark glass styles mapping
+  // Refined severity styling mapping
   const severityConfig = {
     low: {
-      badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30',
-      container: 'bg-emerald-950/25 border-emerald-500/20',
-      iconBg: 'bg-emerald-500/20 text-emerald-400 border border-emerald-400/30 shadow-emerald-500/20',
-      indicator: 'bg-emerald-400',
+      badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
+      container: 'bg-emerald-950/15 border-emerald-500/20',
+      iconColor: 'text-emerald-400',
     },
     moderate: {
-      badge: 'bg-amber-500/20 text-amber-300 border-amber-400/30',
-      container: 'bg-amber-950/25 border-amber-500/20',
-      iconBg: 'bg-amber-500/20 text-amber-400 border border-amber-400/30 shadow-amber-500/20',
-      indicator: 'bg-amber-400',
+      badge: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
+      container: 'bg-amber-950/15 border-amber-500/20',
+      iconColor: 'text-amber-400',
     },
     high: {
-      badge: 'bg-rose-500/20 text-rose-300 border-rose-400/30',
-      container: 'bg-rose-950/30 border-rose-500/30',
-      iconBg: 'bg-rose-500/25 text-rose-300 border border-rose-400/40 shadow-rose-500/25',
-      indicator: 'bg-rose-500',
+      badge: 'bg-orange-500/15 text-orange-300 border-orange-500/20',
+      container: 'bg-orange-950/20 border-orange-500/25',
+      iconColor: 'text-orange-400',
     },
     severe: {
-      badge: 'bg-red-500/30 text-red-200 border-red-400/50 font-black',
-      container: 'bg-red-950/40 border-red-500/40 shadow-lg shadow-red-500/10',
-      iconBg: 'bg-red-500/30 text-red-300 border border-red-400/50 shadow-red-500/30',
-      indicator: 'bg-red-500 animate-ping',
+      badge: 'bg-rose-500/20 text-rose-200 border-rose-500/30 font-semibold',
+      container: 'bg-rose-950/25 border-rose-500/30',
+      iconColor: 'text-rose-400',
     },
   }[risk.level];
 
   return (
     <div
-      className={`glass-panel rounded-2xl p-4 sm:p-5 transition-all duration-300 relative overflow-hidden backdrop-blur-xl ${severityConfig.container} ${className}`}
+      className={`glass-panel rounded-xl p-4 sm:p-5 transition-colors relative overflow-hidden border ${severityConfig.container} ${className}`}
     >
       <div className="flex items-start gap-3.5 relative z-10">
-        {/* Severity & Icon Badge */}
-        <div
-          className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-md ${severityConfig.iconBg}`}
-        >
-          <Icon size={22} />
+        <div className={`w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 ${severityConfig.iconColor}`}>
+          <WeatherIcon icon={risk.icon} size={18} />
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
             <div className="flex items-center gap-2">
-              <h4 className="text-sm font-bold text-white tracking-tight">{risk.title}</h4>
+              <h4 className="text-sm font-semibold text-white tracking-tight">{risk.title}</h4>
               <span
-                className={`text-[10px] uppercase font-extrabold px-2.5 py-0.5 rounded-full border ${severityConfig.badge}`}
+                className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded-md border ${severityConfig.badge}`}
               >
-                {capitalize(risk.level)} Risk
+                {capitalize(risk.level)}
               </span>
             </div>
 
             {/* Active / Inactive Status */}
-            <div className="flex items-center gap-1.5 text-[11px] font-medium">
+            <div className="flex items-center gap-1 text-[11px]">
               {risk.isActive ? (
-                <span className="flex items-center gap-1.5 text-rose-400 font-bold">
-                  <span className="relative flex h-2 w-2">
-                    <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${severityConfig.indicator}`} />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-                  </span>
-                  Active Alert
+                <span className="flex items-center gap-1.5 text-rose-400 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  Active Warning
                 </span>
               ) : (
                 <span className="flex items-center gap-1 text-slate-400">
@@ -93,15 +81,15 @@ export default function RiskAlert({
           </p>
 
           {/* Footer Metadata */}
-          <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400 pt-2.5 border-t border-white/10">
+          <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400 pt-2 border-t border-white/[0.06]">
             <div className="flex items-center gap-1">
-              <Clock size={12} className="text-blue-400" />
-              <span>Valid: <strong className="text-slate-200">{risk.timePeriod}</strong></span>
+              <Clock size={12} className="text-slate-400" />
+              <span>Valid: <strong className="text-slate-300 font-medium">{risk.timePeriod}</strong></span>
             </div>
             {locationName && (
               <div className="flex items-center gap-1">
-                <ShieldAlert size={12} className="text-rose-400" />
-                <span>Region: <strong className="text-slate-200">{locationName}</strong></span>
+                <ShieldAlert size={12} className="text-slate-400" />
+                <span>Sector: <strong className="text-slate-300 font-medium">{locationName}</strong></span>
               </div>
             )}
           </div>

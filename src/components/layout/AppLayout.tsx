@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
-import { CloudSun, Sparkles } from 'lucide-react';
+import { CloudSun } from 'lucide-react';
 import { useWeatherContext } from '../../context/useWeatherContext';
 
 export default function AppLayout() {
@@ -12,10 +12,8 @@ export default function AppLayout() {
       return {
         theme: 'default',
         glowClass: 'weather-glow-night',
-        primaryColor: 'rgba(59, 130, 246, 0.12)',
-        accentColor: 'rgba(99, 102, 241, 0.08)',
-        ambientOrb1: 'from-blue-600/15 via-indigo-900/10 to-transparent',
-        ambientOrb2: 'from-sky-500/10 via-slate-900/20 to-transparent',
+        ambientOrb1: 'from-sky-500/8 via-indigo-950/5 to-transparent',
+        ambientOrb2: 'from-blue-600/6 via-slate-950/10 to-transparent',
       };
     }
 
@@ -26,10 +24,8 @@ export default function AppLayout() {
       return {
         theme: 'storm',
         glowClass: 'weather-glow-storm',
-        primaryColor: 'rgba(139, 92, 246, 0.18)',
-        accentColor: 'rgba(99, 102, 241, 0.15)',
-        ambientOrb1: 'from-indigo-600/20 via-purple-900/15 to-transparent',
-        ambientOrb2: 'from-violet-500/15 via-slate-950/40 to-transparent',
+        ambientOrb1: 'from-indigo-600/10 via-purple-950/8 to-transparent',
+        ambientOrb2: 'from-violet-500/8 via-slate-950/20 to-transparent',
       };
     }
 
@@ -37,10 +33,8 @@ export default function AppLayout() {
       return {
         theme: 'rain',
         glowClass: 'weather-glow-rain',
-        primaryColor: 'rgba(56, 189, 248, 0.16)',
-        accentColor: 'rgba(37, 99, 235, 0.12)',
-        ambientOrb1: 'from-sky-600/20 via-blue-900/15 to-transparent',
-        ambientOrb2: 'from-cyan-500/15 via-slate-950/30 to-transparent',
+        ambientOrb1: 'from-sky-500/10 via-blue-950/8 to-transparent',
+        ambientOrb2: 'from-cyan-500/8 via-slate-950/20 to-transparent',
       };
     }
 
@@ -48,10 +42,8 @@ export default function AppLayout() {
       return {
         theme: 'sunny',
         glowClass: 'weather-glow-sun',
-        primaryColor: 'rgba(245, 158, 11, 0.16)',
-        accentColor: 'rgba(234, 88, 12, 0.10)',
-        ambientOrb1: 'from-amber-500/20 via-orange-950/15 to-transparent',
-        ambientOrb2: 'from-amber-400/12 via-indigo-950/20 to-transparent',
+        ambientOrb1: 'from-amber-500/10 via-orange-950/6 to-transparent',
+        ambientOrb2: 'from-amber-400/6 via-slate-950/15 to-transparent',
       };
     }
 
@@ -59,69 +51,48 @@ export default function AppLayout() {
       return {
         theme: 'cloudy',
         glowClass: 'weather-glow-cloud',
-        primaryColor: 'rgba(148, 163, 184, 0.14)',
-        accentColor: 'rgba(71, 85, 105, 0.10)',
-        ambientOrb1: 'from-slate-500/18 via-slate-800/15 to-transparent',
-        ambientOrb2: 'from-blue-400/10 via-slate-950/30 to-transparent',
+        ambientOrb1: 'from-slate-500/10 via-slate-800/8 to-transparent',
+        ambientOrb2: 'from-blue-400/5 via-slate-950/15 to-transparent',
       };
     }
 
     return {
       theme: 'night',
       glowClass: 'weather-glow-night',
-      primaryColor: 'rgba(99, 102, 241, 0.15)',
-      accentColor: 'rgba(30, 27, 75, 0.2)',
-      ambientOrb1: 'from-indigo-600/15 via-slate-900/20 to-transparent',
-      ambientOrb2: 'from-blue-700/12 via-slate-950/30 to-transparent',
+      ambientOrb1: 'from-indigo-600/8 via-slate-900/10 to-transparent',
+      ambientOrb2: 'from-blue-700/6 via-slate-950/15 to-transparent',
     };
   };
 
   const atmosphere = getAtmosphereConfig();
 
   return (
-    <div className="min-h-screen text-slate-100 flex flex-col lg:flex-row relative bg-[#070b14] overflow-x-hidden selection:bg-blue-500/30 selection:text-blue-200">
-      {/* Dynamic Weather Atmospheric Background */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Deep Atmospheric Base Gradient */}
+    <div className="min-h-screen text-slate-100 flex flex-col lg:flex-row relative bg-[#0b0f19] overflow-x-hidden selection:bg-sky-500/25 selection:text-sky-200">
+      {/* Refined Atmospheric Ambient Lighting */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+        {/* Atmospheric Ambient Glow Layer */}
         <div className={`absolute inset-0 transition-opacity duration-1000 ${atmosphere.glowClass}`} />
 
-        {/* Ambient Organic Light Orbs (Floating Atmospheric Mood) */}
+        {/* Ambient Organic Atmosphere Orbs */}
         <div
-          className={`absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full bg-gradient-to-br ${atmosphere.ambientOrb1} blur-[120px] animate-atmosphere pointer-events-none`}
+          className={`absolute -top-40 -right-40 w-[650px] h-[650px] rounded-full bg-gradient-to-br ${atmosphere.ambientOrb1} blur-[140px] animate-atmosphere pointer-events-none`}
         />
         <div
-          className={`absolute top-1/3 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-tr ${atmosphere.ambientOrb2} blur-[100px] animate-atmosphere pointer-events-none`}
-          style={{ animationDelay: '-6s' }}
-        />
-        <div
-          className="absolute -bottom-40 right-1/4 w-[550px] h-[550px] rounded-full bg-gradient-to-t from-blue-950/20 to-transparent blur-[110px] pointer-events-none"
-        />
-
-        {/* Subtle Spatial Mesh Grid Accent */}
-        <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{
-            backgroundImage: `radial-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 1px)`,
-            backgroundSize: '32px 32px',
-          }}
+          className={`absolute top-1/3 -left-40 w-[550px] h-[550px] rounded-full bg-gradient-to-tr ${atmosphere.ambientOrb2} blur-[120px] animate-atmosphere pointer-events-none`}
+          style={{ animationDelay: '-12s' }}
         />
       </div>
 
       {/* Mobile Top Header */}
-      <header className="lg:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-30 bg-slate-950/75 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/20">
+      <header className="lg:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-30 bg-[#0b0f19]/85 backdrop-blur-xl border-b border-white/[0.07]">
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-400/30 text-blue-400 shadow-inner">
-            <CloudSun size={18} />
+          <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] text-sky-400">
+            <CloudSun size={17} />
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-base font-extrabold text-white tracking-tight">WeatherGPT</h1>
-              <span className="flex items-center gap-0.5 text-[9px] font-semibold text-blue-300 bg-blue-500/20 px-1.5 py-0.2 rounded-full border border-blue-400/30">
-                <Sparkles size={9} /> AI
-              </span>
-            </div>
-            <p className="text-[10px] font-medium text-slate-400">
-              {currentWeather ? `${currentWeather.location} • ${currentWeather.temperature}°C` : 'Intelligence Matrix'}
+            <h1 className="text-sm font-semibold text-white tracking-tight leading-none">WeatherGPT</h1>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {currentWeather ? `${currentWeather.location} • ${currentWeather.temperature}°C` : 'Meteorological Intelligence'}
             </p>
           </div>
         </div>

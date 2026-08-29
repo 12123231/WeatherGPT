@@ -89,19 +89,19 @@ export default function VoiceInput({
       disabled={disabled}
       aria-label={isListening ? 'Stop voice recording' : 'Start voice input'}
       title={isListening ? 'Listening... click to stop' : 'Voice input'}
-      className={`relative p-3 rounded-2xl transition-all duration-200 flex items-center justify-center shrink-0 ${
+      className={`relative p-2.5 rounded-xl transition-colors flex items-center justify-center shrink-0 ${
         isListening
-          ? 'bg-rose-500 text-white animate-pulse shadow-lg shadow-rose-500/30'
-          : 'glass-pill text-slate-300 hover:text-white hover:bg-white/[0.12]'
-      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'} ${className}`}
+          ? 'bg-rose-500 text-white shadow-sm'
+          : 'bg-white/[0.04] text-slate-300 hover:text-white hover:bg-white/[0.08] border border-white/[0.08]'
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
     >
       {isListening ? (
         <>
-          <MicOff size={18} />
+          <MicOff size={16} />
           <span className="sr-only">Listening...</span>
         </>
       ) : (
-        <Mic size={18} />
+        <Mic size={16} />
       )}
     </button>
   );
