@@ -21,11 +21,13 @@ export function useChat(locationId: string) {
       try {
         const response = await chatService.sendChatMessage(text, locationId);
         setMessages((prev) => [...prev, response]);
-      } catch {
+      } catch (err: unknown) {
+        const errorText = err instanceof Error ? err.message : 'Unknown network/API error';
+        console.error('[useChat Error]:', err);
         const errorMsg: ChatMessage = {
           id: `err-${Date.now()}`,
           role: 'assistant',
-          content: 'Sorry, I encountered an error. Please try again.',
+          content: `Connection error: ${errorText}`,
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, errorMsg]);

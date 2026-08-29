@@ -7,8 +7,8 @@ export type DetectedLanguage = 'hindi' | 'hinglish' | 'english';
  * Hindi transliteration mapping for common Indian cities to ensure accurate WeatherAPI resolution.
  */
 const HINDI_CITY_MAP: Record<string, string> = {
-  'नई दिल्ली': 'New Delhi',
   'दिल्ली': 'Delhi',
+  'नई दिल्ली': 'New Delhi',
   'मुंबई': 'Mumbai',
   'बम्बई': 'Mumbai',
   'बेंगलुरु': 'Bengaluru',
@@ -32,46 +32,7 @@ const HINDI_CITY_MAP: Record<string, string> = {
   'कानपुर': 'Kanpur',
   'नागपुर': 'Nagpur',
   'वाराणसी': 'Varanasi',
-  'काशी': 'Varanasi',
-  'बनारस': 'Varanasi',
   'आगरा': 'Agra',
-};
-
-/**
- * Common English and romanized Indian city aliases.
- */
-const KNOWN_CITY_ALIASES: Record<string, string> = {
-  bangalore: 'Bengaluru',
-  bengaluru: 'Bengaluru',
-  bengalooru: 'Bengaluru',
-  delhi: 'Delhi',
-  'new delhi': 'New Delhi',
-  mumbai: 'Mumbai',
-  bombay: 'Mumbai',
-  bambai: 'Mumbai',
-  kolkata: 'Kolkata',
-  calcutta: 'Kolkata',
-  chennai: 'Chennai',
-  madras: 'Chennai',
-  jaipur: 'Jaipur',
-  pune: 'Pune',
-  poona: 'Pune',
-  hyderabad: 'Hyderabad',
-  lucknow: 'Lucknow',
-  ahmedabad: 'Ahmedabad',
-  chandigarh: 'Chandigarh',
-  shimla: 'Shimla',
-  goa: 'Goa',
-  patna: 'Patna',
-  bhopal: 'Bhopal',
-  indore: 'Indore',
-  surat: 'Surat',
-  kanpur: 'Kanpur',
-  nagpur: 'Nagpur',
-  varanasi: 'Varanasi',
-  kashi: 'Varanasi',
-  banaras: 'Varanasi',
-  agra: 'Agra',
 };
 
 /**
@@ -79,33 +40,26 @@ const KNOWN_CITY_ALIASES: Record<string, string> = {
  */
 const NON_LOCATION_WORDS = new Set([
   'today', 'tomorrow', 'tonight', 'yesterday', 'weather', 'forecast', 'rain',
-  'raining', 'rainy', 'rains', 'temperature', 'temp', 'humidity', 'wind', 'sun', 'sunny',
-  'hot', 'hotter', 'hottest', 'cold', 'colder', 'coldest', 'heat', 'warm', 'air', 'quality', 'aqi',
-  'here', 'there', 'now', 'this', 'that', 'these', 'those',
+  'raining', 'rainy', 'temperature', 'temp', 'humidity', 'wind', 'sun', 'sunny',
+  'hot', 'cold', 'heat', 'air', 'quality', 'aqi', 'here', 'there', 'now', 'this',
   'week', 'weekly', 'weekend', 'days', 'day', 'next', 'current', 'live', 'morning',
   'evening', 'afternoon', 'night', 'hourly', 'daily', 'safe', 'safety', 'travel',
   'umbrella', 'report', 'update', 'status', 'condition', 'conditions', 'alerts',
   'warning', 'advisories', 'advice', 'help', 'info', 'information', 'details',
   'please', 'tell', 'give', 'show', 'check', 'know', 'can', 'will', 'what', 'how',
-  'whats', "what's", 'hows', "how's", 'is', 'are', 'was', 'were', 'the', 'a', 'an',
-  'in', 'of', 'for', 'at', 'near', 'to', 'from', 'with', 'about', 'like',
-  'it', 'its', "it's", 'me', 'my', 'us', 'our', 'you', 'your', 'going',
-  'does', 'do', 'did', 'would', 'should', 'could', 'be', 'been', 'having', 'have', 'has',
-  'any', 'some', 'much', 'many', 'very', 'too', 'also', 'just', 'so', 'as',
-  'city', 'place', 'location', 'area', 'region', 'zone', 'state', 'country', 'world',
-  'sky', 'skies', 'cloud', 'clouds', 'cloudy', 'clear', 'overcast', 'thunder', 'storm',
-  'visibility', 'pressure', 'chance', 'probability', 'breeze',
-  'aaj', 'kal', 'parson', 'kya', 'hai', 'hain', 'hein', 'hoga', 'hogi', 'honge',
-  'batao', 'bataiye', 'bataye', 'bolo', 'mausam', 'mosam', 'baarish', 'barish', 'barsaat',
-  'garmi', 'thand', 'sardi', 'hawa', 'badal', 'dhoop', 'chahiye', 'chhatri', 'chhata',
-  'safari', 'safar', 'mein', 'mai', 'me', 'pe', 'par', 'ka', 'ki', 'ke', 'ko', 'se',
-  'rahega', 'rahegi', 'rahenge', 'kaisa', 'kaisi', 'kaise', 'kitna', 'kitni', 'kitne',
-  'yahan', 'yaha', 'wahan', 'waha', 'abhi', 'idhar', 'udhar', 'kripya', 'shahar', 'jagah',
+  'whats', "what's", 'hows', "how's", 'is', 'the', 'a', 'an', 'in', 'of', 'for', 'at',
+  'near', 'to', 'from', 'with', 'about', 'like', 'aaj', 'kal', 'parson', 'kya', 'hai',
+  'hain', 'hein', 'hoga', 'hogi', 'honge', 'batao', 'bataiye', 'bataye', 'mausam',
+  'mosam', 'baarish', 'barish', 'barsaat', 'garmi', 'thand', 'hawa', 'badal', 'dhoop',
+  'chahiye', 'chhatri', 'safari', 'safar', 'mein', 'mai', 'pe', 'ka', 'ki', 'ke', 'ko',
+  'se', 'rahega', 'rahegi', 'kaisa', 'kaisi', 'kaise', 'kitna', 'kitni', 'kitne',
+  'give', 'me', 'full', 'complete', 'overview', 'summary', 'city', 'place', 'location',
+  'area', 'region', 'zone', 'state', 'country', 'world', 'globe', 'sky', 'skies', 'cloud',
+  'clouds', 'cloudy', 'clear', 'overcast', 'thunder', 'storm', 'visibility', 'pressure',
   'आज', 'कल', 'परसों', 'क्या', 'है', 'हैं', 'होगा', 'होगी', 'होंगे', 'बताओ', 'बताइए',
-  'बताएं', 'मौसम', 'बारिश', 'वर्षा', 'बरसात', 'पानी', 'गर्मी', 'ठंड', 'सर्दी', 'हवा',
-  'बादल', 'धूप', 'चाहिए', 'छाता', 'छतरी', 'सफर', 'में', 'पे', 'पर', 'का', 'की', 'के',
-  'को', 'से', 'रहेगा', 'रहेगी', 'रहेंगे', 'कैसा', 'कैसी', 'कैसे', 'कितना', 'कितनी',
-  'कितने', 'यहाँ', 'वहाँ', 'अभी', 'इधर', 'उधर', 'कृपया', 'शहर', 'जगह'
+  'बताएं', 'मौसम', 'बारिश', 'वर्षा', 'बरसात', 'गर्मी', 'ठंड', 'हवा', 'बादल', 'धूप',
+  'चाहिए', 'छाता', 'सफर', 'में', 'का', 'की', 'के', 'को', 'से', 'रहेगा', 'रहेगी', 'कैसा',
+  'कैसी', 'कैसे', 'कितना', 'कितनी', 'कितने'
 ]);
 
 /**
@@ -177,77 +131,6 @@ function isWeeklyForecastQuery(message: string): boolean {
 }
 
 /**
- * Helper to clean and validate potential candidate location strings.
- */
-function cleanAndValidateCandidate(rawCandidate: string): string | null {
-  if (!rawCandidate) return null;
-
-  const words = rawCandidate
-    .replace(/[^\w\s\u0900-\u097F-]/g, ' ')
-    .split(/\s+/)
-    .filter(Boolean);
-
-  // Strip leading stopwords
-  while (words.length > 0 && NON_LOCATION_WORDS.has(words[0].toLowerCase())) {
-    words.shift();
-  }
-  // Strip trailing stopwords
-  while (words.length > 0 && NON_LOCATION_WORDS.has(words[words.length - 1].toLowerCase())) {
-    words.pop();
-  }
-
-  if (words.length === 0) return null;
-
-  const cleaned = words.join(' ').trim();
-  if (cleaned.length < 2) return null;
-
-  // If every word is a stopword, reject
-  if (words.every((w) => NON_LOCATION_WORDS.has(w.toLowerCase()))) {
-    return null;
-  }
-
-  return cleaned;
-}
-
-/**
- * Resolves a candidate string against known maps or live search API.
- */
-async function resolveLocationCandidate(candidate: string): Promise<string | null> {
-  const lower = candidate.toLowerCase();
-
-  // 1. Check Hindi transliteration mapping
-  if (HINDI_CITY_MAP[candidate]) {
-    return HINDI_CITY_MAP[candidate];
-  }
-
-  // 2. Check known aliases
-  if (KNOWN_CITY_ALIASES[lower]) {
-    return KNOWN_CITY_ALIASES[lower];
-  }
-
-  // 3. Verify candidate with searchLocations()
-  try {
-    const searchResults = await searchLocations(candidate);
-    if (Array.isArray(searchResults) && searchResults.length > 0) {
-      const match = searchResults.find(
-        (loc) =>
-          loc.name.toLowerCase() === lower ||
-          loc.name.toLowerCase().includes(lower) ||
-          lower.includes(loc.name.toLowerCase())
-      );
-      return match ? match.name : searchResults[0].name;
-    }
-  } catch {
-    // If search fails but candidate is a legitimate multi-character non-stopword, return candidate
-    if (candidate.length >= 3 && !NON_LOCATION_WORDS.has(lower)) {
-      return candidate;
-    }
-  }
-
-  return null;
-}
-
-/**
  * Extracts and resolves an explicit location mentioned in the user message.
  * Falls back to fallbackLocation if no explicit valid location is mentioned.
  */
@@ -256,24 +139,14 @@ export async function extractLocationFromMessage(message: string, fallbackLocati
 
   const raw = message.trim();
 
-  // 1. Direct Devanagari Hindi City Match (check longer strings first)
-  const devanagariKeys = Object.keys(HINDI_CITY_MAP).sort((a, b) => b.length - a.length);
-  for (const hindiCity of devanagariKeys) {
-    if (raw.includes(hindiCity)) {
-      return HINDI_CITY_MAP[hindiCity];
-    }
-  }
-
-  // 2. Structured pattern candidate extraction
+  // Pattern candidates without relying on Unicode-incompatible \b
   const candidatePatterns = [
-    // Preposition patterns: "weather in Delhi", "forecast for Mumbai", "temperature of Kolkata", "travel to Shimla", "about Goa"
-    /(?:^|\s+)(?:in|of|for|at|around|near|to|about)\s+([a-zA-Z\u0900-\u097F\s-]{2,30}?)(?=[?,.!;:]|\s+(?:today|tomorrow|tonight|now|this|please|right|next|weather|forecast|kaisa|kaisi|mein|mai|me|ka|ki|ke|pe|par)|$)/gi,
-    // Leading location patterns: "Delhi weather", "Mumbai 7 day forecast", "Jaipur temperature", "Bangalore tomorrow"
-    /(?:^|\s+)([a-zA-Z\u0900-\u097F\s-]{2,30}?)\s+(?:weather|forecast|temperature|temp|climate|alerts?|mausam|mosam|baarish|barish|garmi|thand|today|tomorrow|tonight)(?:\s+|$|[?,.!;:])/gi,
-    // Hindi/Hinglish postposition patterns: "Delhi mein", "Mumbai ka mausam", "दिल्ली में", "जयपुर का"
-    /(?:^|\s+)([a-zA-Z\u0900-\u097F\s-]{2,30}?)\s+(?:mein|mai|me|ka|ki|ke|pe|par|se|में|का|की|के|पर|से)(?:\s+|$|[?,.!;:])/gi,
-    // Question / query patterns: "how hot is Mumbai?", "how is Bangalore?", "is it raining in Delhi?"
-    /(?:^|\s+)(?:how(?:'s|\s+is|\s+hot\s+is|\s+cold\s+is|\s+warm\s+is|\s+about)?|check|show)\s+([a-zA-Z\u0900-\u097F\s-]{2,30}?)(?=[?,.!;:]|\s+(?:today|tomorrow|tonight|now|this|please|right|next|weather|forecast)|$)/gi,
+    // Preposition patterns: "weather in Delhi", "forecast for Mumbai", "temperature of Kolkata", "in New Delhi"
+    /(?:^|\s+)(?:in|of|for|at|around|near)\s+([a-zA-Z\u0900-\u097F\s]{2,30}?)(?=[?,.!;]|\s+(?:today|tomorrow|tonight|now|this|please|right|next|weather|forecast|kaisa|kaisi|mein|ka|ki|ke)|$)/gi,
+    // Leading location patterns: "Delhi weather", "Mumbai 7 day forecast", "Jaipur temperature"
+    /(?:^|\s+)([a-zA-Z\u0900-\u097F\s]{2,30}?)\s+(?:weather|forecast|temperature|temp|climate|alerts?|mausam|mosam|baarish|barish|garmi|thand)(?:\s+|$|[?,.!;])/gi,
+    // Hindi/Hinglish patterns: "Delhi mein", "Mumbai ka mausam", "दिल्ली में", "जयपुर का"
+    /(?:^|\s+)([a-zA-Z\u0900-\u097F\s]{2,30}?)\s+(?:mein|mai|ka|ki|ke|pe|में|का|की|के)(?:\s+|$|[?,.!;])/gi,
   ];
 
   const extractedCandidates: string[] = [];
@@ -287,43 +160,75 @@ export async function extractLocationFromMessage(message: string, fallbackLocati
     }
   }
 
-  // Validate extracted candidates from patterns
+  // Clean candidates and filter out stopwords
   for (const rawCandidate of extractedCandidates) {
-    const candidate = cleanAndValidateCandidate(rawCandidate);
-    if (!candidate) continue;
+    const words = rawCandidate
+      .replace(/[^\w\s\u0900-\u097F]/g, '')
+      .split(/\s+/)
+      .filter(Boolean);
 
-    const resolved = await resolveLocationCandidate(candidate);
-    if (resolved) {
-      return resolved;
+    // Strip leading/trailing stop words
+    while (words.length > 0 && NON_LOCATION_WORDS.has(words[0].toLowerCase())) {
+      words.shift();
+    }
+    while (words.length > 0 && NON_LOCATION_WORDS.has(words[words.length - 1].toLowerCase())) {
+      words.pop();
+    }
+
+    if (words.length === 0) continue;
+
+    let cleaned = words.join(' ');
+    if (cleaned.length < 2) continue;
+
+    // Check direct Hindi transliteration mapping
+    if (HINDI_CITY_MAP[cleaned]) {
+      cleaned = HINDI_CITY_MAP[cleaned];
+    }
+
+    // Check if candidate is all non-location words
+    const allStopWords = words.every((w) => NON_LOCATION_WORDS.has(w.toLowerCase()));
+    if (allStopWords) continue;
+
+    // Verify candidate with searchLocations()
+    try {
+      const searchResults = await searchLocations(cleaned);
+      if (Array.isArray(searchResults) && searchResults.length > 0) {
+        // Return top matched location name
+        const match = searchResults.find(
+          (loc) =>
+            loc.name.toLowerCase() === cleaned.toLowerCase() ||
+            loc.name.toLowerCase().includes(cleaned.toLowerCase()) ||
+            cleaned.toLowerCase().includes(loc.name.toLowerCase())
+        );
+        return match ? match.name : searchResults[0].name;
+      }
+    } catch {
+      return cleaned;
     }
   }
 
-  // 3. Sliding token window extraction (2-word phrases first, then 1-word tokens)
-  const words = raw
-    .replace(/[^\w\s\u0900-\u097F-]/g, ' ')
+  // Fallback: If no preposition matched, test individual 1-2 word potential city tokens in query
+  const cleanTokens = raw
+    .replace(/[^\w\s\u0900-\u097F]/g, '')
     .split(/\s+/)
-    .filter(Boolean);
+    .filter((w) => w.length >= 2 && !NON_LOCATION_WORDS.has(w.toLowerCase()));
 
-  // Check 2-word combinations first (e.g. "New Delhi")
-  for (let i = 0; i < words.length - 1; i++) {
-    const twoWord = `${words[i]} ${words[i + 1]}`.trim();
-    const candidate = cleanAndValidateCandidate(twoWord);
-    if (!candidate) continue;
-
-    const resolved = await resolveLocationCandidate(candidate);
-    if (resolved) {
-      return resolved;
+  for (let token of cleanTokens) {
+    if (HINDI_CITY_MAP[token]) {
+      token = HINDI_CITY_MAP[token];
     }
-  }
-
-  // Check 1-word tokens (e.g. "Delhi", "Mumbai", "Bangalore")
-  for (const word of words) {
-    const candidate = cleanAndValidateCandidate(word);
-    if (!candidate) continue;
-
-    const resolved = await resolveLocationCandidate(candidate);
-    if (resolved) {
-      return resolved;
+    try {
+      const searchResults = await searchLocations(token);
+      if (Array.isArray(searchResults) && searchResults.length > 0) {
+        const exact = searchResults.find(
+          (loc) => loc.name.toLowerCase() === token.toLowerCase()
+        );
+        if (exact) {
+          return exact.name;
+        }
+      }
+    } catch {
+      // Continue search
     }
   }
 

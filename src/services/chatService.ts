@@ -1,15 +1,15 @@
 import type { ChatMessage } from '../types/chat';
-import { mockChatResponses, defaultMockResponse } from '../data/mockChat';
 import { API_BASE_URL } from '../config';
 
 /**
  * Chat service layer connected to WeatherGPT Backend.
- * Uses contextual backend reasoning engine and gracefully falls back to local patterns.
  */
-
 export async function sendChatMessage(userMessage: string, locationId: string = 'new-delhi'): Promise<ChatMessage> {
+  const url = `${API_BASE_URL}/chat`;
+  console.log(`[WeatherGPT Chat] Sending POST request to ${url} with payload:`, { message: userMessage, location: locationId });
+
   try {
-    const res = await fetch(`${API_BASE_URL}/chat`, {
+    const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -20,33 +20,28 @@ export async function sendChatMessage(userMessage: string, locationId: string = 
       }),
     });
 
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success && json.data) {
-        return json.data;
+    if (!res.ok) {
+      let errorMsg = `Server returned status ${res.status} (${res.statusText})`;
+      try {
+        const errJson = await res.json();
+        if (errJson?.error) {
+          errorMsg = `${errJson.error} (Status: ${res.status})`;
+        }
+      } catch {
+        // ignore json parse error
       }
+      throw new Error(`API Error [${url}]: ${errorMsg}`);
     }
-  } catch {
-    // Graceful fallback to client simulated intelligence
-  }
 
-  // Fallback keyword-matching response
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  const lower = userMessage.toLowerCase();
-  let responseText = defaultMockResponse;
-
-  for (const [keyword, response] of Object.entries(mockChatResponses)) {
-    if (lower.includes(keyword)) {
-      responseText = response;
-      break;
+    const json = await res.json();
+    if (json.success && json.data) {
+      return json.data;
     }
-  }
 
-  return {
-    id: `msg-${Date.now()}`,
-    role: 'assistant',
-    content: responseText,
-    timestamp: new Date().toISOString(),
-  };
+    throw new Error(json.error || `Invalid response format from ${url}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[WeatherGPT Chat] Request failed for ${url}:`, err);
+    throw new Error(`Chat error [${url}]: ${msg}`);
+  }
 }

@@ -1,5 +1,6 @@
 /**
  * WeatherGPT Client Configuration
- * Base API URL configured through environment variables with local server default
+ * Base API URL configured through environment variables
  */
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
