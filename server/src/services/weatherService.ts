@@ -20,8 +20,8 @@ function mapWeatherApiConditionToIcon(text: string): string {
 const CITY_ALIASES: Record<string, string> = {
   bangalore: 'bengaluru',
   bengalooru: 'bengaluru',
-  delhi: 'new-delhi',
-  dilli: 'new-delhi',
+  delhi: 'delhi',
+  dilli: 'delhi',
   'new delhi': 'new-delhi',
   'new-delhi': 'new-delhi',
   bombay: 'mumbai',
@@ -58,8 +58,8 @@ function findMockLocation(locationQuery: string): LocationData | null {
 }
 
 const CITY_QUERY_DISAMBIGUATION: Record<string, string> = {
-  delhi: 'New Delhi',
-  dilli: 'New Delhi',
+  delhi: 'Delhi',
+  dilli: 'Delhi',
   'new-delhi': 'New Delhi',
   'new delhi': 'New Delhi',
   bangalore: 'Bengaluru',
