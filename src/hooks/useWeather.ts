@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { CurrentWeather, ForecastDay, WeatherRisk, LocationData } from '../types/weather';
+import type { CurrentWeather, ForecastDay, HourlyForecast, WeatherRisk, LocationData } from '../types/weather';
 import * as weatherService from '../services/weatherService';
 
 interface UseWeatherState {
   currentWeather: CurrentWeather | null;
   forecast: ForecastDay[];
+  hourlyForecast: HourlyForecast[];
   risks: WeatherRisk[];
   selectedLocation: LocationData;
   locations: LocationData[];
@@ -18,6 +19,7 @@ export function useWeather() {
   const [state, setState] = useState<UseWeatherState>({
     currentWeather: null,
     forecast: [],
+    hourlyForecast: [],
     risks: [],
     selectedLocation: allLocations[0],
     locations: allLocations,
@@ -28,12 +30,13 @@ export function useWeather() {
   const loadWeatherData = useCallback(async (locationId: string) => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
-      const [currentWeather, forecast, risks] = await Promise.all([
+      const [currentWeather, forecast, hourlyForecast, risks] = await Promise.all([
         weatherService.getCurrentWeather(locationId),
         weatherService.getForecast(locationId),
+        weatherService.getHourlyForecast(locationId),
         weatherService.getWeatherRisks(locationId),
       ]);
-      setState((prev) => ({ ...prev, currentWeather, forecast, risks, loading: false }));
+      setState((prev) => ({ ...prev, currentWeather, forecast, hourlyForecast, risks, loading: false }));
     } catch (err) {
       setState((prev) => ({
         ...prev,

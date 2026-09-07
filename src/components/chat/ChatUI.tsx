@@ -48,7 +48,7 @@ export default function ChatUI({
     'Will it rain today?',
     'What should I wear today?',
     'Is it safe to travel this evening?',
-    "Show me this week's forecast",
+    'Show me the 3-day forecast',
   ];
 
   return (

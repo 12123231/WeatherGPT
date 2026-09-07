@@ -11,6 +11,7 @@ import { Calendar, Clock, Droplets, Wind, Thermometer } from 'lucide-react';
 export default function ForecastPage() {
   const {
     forecast,
+    hourlyForecast,
     selectedLocation,
     loading,
     error,
@@ -44,7 +45,7 @@ export default function ForecastPage() {
         <ErrorState message={error} onRetry={refresh} />
       ) : (
         <>
-          {/* Primary 7-Day Forecast */}
+          {/* Primary 3-Day Forecast */}
           <ForecastCard forecast={forecast} />
 
           {/* Today's 24h / Hourly Trend Section */}
@@ -69,9 +70,9 @@ export default function ForecastPage() {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-              {mockHourlyForecast.map((hour, idx) => (
+              {(hourlyForecast && hourlyForecast.length > 0 ? hourlyForecast : mockHourlyForecast).slice(0, 6).map((hour, idx) => (
                 <div
-                  key={idx}
+                  key={`${hour.time}-${idx}`}
                   className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05] flex flex-col items-center justify-between text-center gap-2 hover:bg-white/[0.05] hover:border-white/[0.1] transition-colors"
                 >
                   <span className="text-xs font-medium text-slate-400">

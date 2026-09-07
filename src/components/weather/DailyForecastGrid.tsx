@@ -15,19 +15,15 @@ export default function DailyForecastGrid({
   // Default to day index 0 (Today) or Wed
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
 
-  // Reference visual defaults for 7 days
+  // Reference visual defaults for 3 days
   const fallbackDays: ForecastDay[] = [
-    { date: '2026-08-30', day: 'Sun', condition: { main: 'Sunny', description: 'Clear and sunny', icon: 'sun' }, high: 28, low: 12, rainProbability: 0, humidity: 55, windSpeed: 10 },
+    { date: '2026-08-30', day: 'Today', condition: { main: 'Sunny', description: 'Clear and sunny', icon: 'sun' }, high: 28, low: 12, rainProbability: 0, humidity: 55, windSpeed: 10 },
     { date: '2026-08-31', day: 'Mon', condition: { main: 'Partly Cloudy', description: 'Scattered clouds', icon: 'cloud-sun' }, high: 26, low: 11, rainProbability: 10, humidity: 58, windSpeed: 12 },
     { date: '2026-09-01', day: 'Tue', condition: { main: 'Cloudy', description: 'Overcast skies', icon: 'cloud' }, high: 27, low: 12, rainProbability: 20, humidity: 62, windSpeed: 11 },
-    { date: '2026-09-02', day: 'Wed', condition: { main: 'Rain', description: 'Moderate showers', icon: 'cloud-rain' }, high: 23, low: 13, rainProbability: 60, humidity: 78, windSpeed: 16 },
-    { date: '2026-09-03', day: 'Thu', condition: { main: 'Cloudy', description: 'Passing clouds', icon: 'cloud' }, high: 30, low: 14, rainProbability: 15, humidity: 60, windSpeed: 14 },
-    { date: '2026-09-04', day: 'Fri', condition: { main: 'Partly Cloudy', description: 'Partly cloudy', icon: 'cloud-sun' }, high: 23, low: 10, rainProbability: 10, humidity: 56, windSpeed: 12 },
-    { date: '2026-09-05', day: 'Sat', condition: { main: 'Sunny', description: 'Clear sunny sky', icon: 'sun' }, high: 24, low: 9, rainProbability: 5, humidity: 50, windSpeed: 9 },
   ];
 
   // Merge live forecast data if available
-  const displayForecast = forecast && forecast.length >= 7 ? forecast.slice(0, 7) : fallbackDays;
+  const displayForecast = forecast && forecast.length > 0 ? forecast.slice(0, 3) : fallbackDays;
   const activeDay = displayForecast[selectedDayIndex] || displayForecast[0];
 
   const renderIcon = (iconName: string) => {
@@ -48,8 +44,8 @@ export default function DailyForecastGrid({
 
   return (
     <div className={`space-y-3.5 select-none ${className}`}>
-      {/* 7-Day Forecast Horizontal Cards Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+      {/* 3-Day Forecast Horizontal Cards Row */}
+      <div className="grid grid-cols-3 gap-3">
         {displayForecast.map((item, index) => {
           const isSelected = index === selectedDayIndex;
           const dayLabel = item.day === 'Today' ? 'Today' : item.day.slice(0, 3);

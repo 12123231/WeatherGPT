@@ -18,6 +18,8 @@ export interface CurrentWeather {
   pressure: number;
   uvIndex: number;
   lastUpdated: string;
+  timezone?: string;
+  localtime?: string;
 }
 
 export interface ForecastDay {
@@ -36,6 +38,9 @@ export interface HourlyForecast {
   temperature: number;
   condition: WeatherCondition;
   rainProbability: number;
+  hour?: number;
+  date?: string;
+  isDay?: boolean;
 }
 
 export type RiskLevel = 'low' | 'moderate' | 'high' | 'severe';
@@ -58,6 +63,7 @@ export interface LocationData {
   country: string;
   lat: number;
   lon: number;
+  timezone?: string;
 }
 
 export interface ChatMessage {

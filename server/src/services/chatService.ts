@@ -152,11 +152,17 @@ export function detectLanguage(message: string): DetectedLanguage {
 }
 
 /**
- * Detects if the user is asking for a weekly or 7-day weather forecast.
+ * Detects if the user is asking for a multi-day or 3-day weather forecast.
  */
-function isWeeklyForecastQuery(message: string): boolean {
+function isMultiDayForecastQuery(message: string): boolean {
   const lower = message.toLowerCase();
   return (
+    lower.includes('3 day') ||
+    lower.includes('3-day') ||
+    lower.includes('3 days') ||
+    lower.includes('three day') ||
+    lower.includes('three days') ||
+    lower.includes('3 दिन') ||
     lower.includes('7 day') ||
     lower.includes('7-day') ||
     lower.includes('7 days') ||
@@ -164,9 +170,11 @@ function isWeeklyForecastQuery(message: string): boolean {
     lower.includes('weekly') ||
     lower.includes('week forecast') ||
     lower.includes('next 7 days') ||
+    lower.includes('next 3 days') ||
     lower.includes('for the week') ||
     lower.includes('whole week') ||
     lower.includes('full week') ||
+    lower.includes('extended forecast') ||
     lower.includes('complete forecast') ||
     lower.includes('हफ्ते') ||
     lower.includes('सप्ताह') ||
@@ -333,7 +341,7 @@ export async function extractLocationFromMessage(message: string, fallbackLocati
 export async function processChatQuery(message: string, locationQuery: string = 'new-delhi'): Promise<ChatMessage> {
   const apiKey = process.env.AI_API_KEY;
   const language = detectLanguage(message);
-  const isWeekly = isWeeklyForecastQuery(message);
+  const isMultiDay = isMultiDayForecastQuery(message);
 
   // 1. Resolve target location (Explicit message location takes priority over UI selected location)
   const targetLocation = await extractLocationFromMessage(message, locationQuery);
@@ -352,7 +360,7 @@ export async function processChatQuery(message: string, locationQuery: string = 
   // 3. If Gemini AI API key is provided, attempt Gemini generation
   if (apiKey) {
     try {
-      const geminiResponse = await callGeminiApi(apiKey, message, language, isWeekly, weather, forecast, risks);
+      const geminiResponse = await callGeminiApi(apiKey, message, language, isMultiDay, weather, forecast, risks);
       if (geminiResponse && geminiResponse.trim()) {
         return {
           id: `msg-${Date.now()}`,
@@ -366,8 +374,8 @@ export async function processChatQuery(message: string, locationQuery: string = 
     }
   }
 
-  // 4. Meteorological Rule Engine Fallback with Language & Weekly Forecast Support
-  const responseText = generateContextualWeatherResponse(message, language, isWeekly, weather, forecast, risks);
+  // 4. Meteorological Rule Engine Fallback with Language & Multi-Day Forecast Support
+  const responseText = generateContextualWeatherResponse(message, language, isMultiDay, weather, forecast, risks);
 
   return {
     id: `msg-${Date.now()}`,
@@ -381,7 +389,7 @@ async function callGeminiApi(
   apiKey: string,
   userMessage: string,
   language: DetectedLanguage,
-  isWeekly: boolean,
+  isMultiDay: boolean,
   weather: { location: string; region?: string; country?: string; temperature: number; feelsLike: number; humidity: number; windSpeed: number; windDirection: string; visibility: number; pressure: number; uvIndex: number; condition: { main: string; description: string } },
   forecast: Array<{ date: string; day: string; high: number; low: number; condition: { main: string }; rainProbability: number }>,
   risks: Array<{ title: string; level: string; description: string; timePeriod: string; isActive: boolean }>
@@ -403,12 +411,12 @@ async function callGeminiApi(
 - Respond in clear, concise ENGLISH.`;
   }
 
-  const weeklyDirective = isWeekly
-    ? `CRITICAL MANDATORY 7-DAY FORECAST REQUIREMENT:
-- The user is asking for the weekly / 7-day forecast for ${weather.location}.
+  const multiDayDirective = isMultiDay
+    ? `CRITICAL MANDATORY 3-DAY FORECAST REQUIREMENT:
+- The user is asking for the multi-day / 3-day forecast for ${weather.location}.
 - You MUST list ALL ${forecast.length} supplied forecast days in exact chronological order.
 - For each day, include: Day, Date, High temp, Low temp, Condition, and Rain probability%.
-- Use ONLY the supplied forecast data below. Do NOT invent, change, estimate, or omit any values.`
+- Use ONLY the supplied forecast data below. Do NOT invent, change, estimate, or omit any values. Do NOT claim there are 7 days of forecast; accurately present the 3 days provided.`
     : '';
 
   const systemPrompt = `You are WeatherGPT, an AI-powered conversational weather intelligence platform for the Smart India Hackathon (SIH 2026).
@@ -419,7 +427,7 @@ Target Weather Location: ${weather.location}, ${weather.region || ''} ${weather.
 
 ${languageDirective}
 
-${weeklyDirective}
+${multiDayDirective}
 
 Live Meteorological Telemetry for ${weather.location}:
 - Location: ${weather.location}, ${weather.region || ''} ${weather.country || ''}
@@ -440,7 +448,7 @@ ${risks.length > 0 ? risks.map((r) => `- [${r.level.toUpperCase()}] ${r.title}: 
 Formatting Instructions:
 - Answer the user's question directly, conversationally, and accurately using the live data above for ${weather.location}.
 - Mention specific temperatures, rain probabilities, or precautions when relevant.
-${isWeekly ? '- Format the complete 7-day forecast clearly with bullet points for every supplied day.' : '- Keep the response concise, practical, and easy to read (2-4 sentences).'}`;
+${isMultiDay ? '- Format the complete 3-day forecast clearly with bullet points for every supplied day.' : '- Keep the response concise, practical, and easy to read (2-4 sentences).'}`;
 
   // Standard gemini models
   const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
@@ -490,7 +498,7 @@ ${isWeekly ? '- Format the complete 7-day forecast clearly with bullet points fo
 function generateContextualWeatherResponse(
   query: string,
   language: DetectedLanguage,
-  isWeekly: boolean,
+  isMultiDay: boolean,
   weather: { location: string; temperature: number; feelsLike: number; humidity: number; windSpeed: number; windDirection: string; uvIndex: number; condition: { main: string; description: string } },
   forecast: Array<{ day: string; date: string; high: number; low: number; condition: { main: string }; rainProbability: number }>,
   risks: Array<{ title: string; level: string; description: string; isActive: boolean }>
@@ -499,24 +507,24 @@ function generateContextualWeatherResponse(
   const todayForecast = forecast[0];
   const rainChance = todayForecast ? todayForecast.rainProbability : 20;
 
-  // --- WEEKLY FORECAST FALLBACK ---
-  if (isWeekly && forecast.length > 0) {
+  // --- 3-DAY / MULTI-DAY FORECAST FALLBACK ---
+  if (isMultiDay && forecast.length > 0) {
     if (language === 'hindi') {
       const lines = forecast.map(
         (f) => `• ${f.day} (${f.date}): अधिकतम ${f.high}°C / न्यूनतम ${f.low}°C, ${f.condition.main}, बारिश: ${f.rainProbability}%`
       );
-      return `${weather.location} के लिए 7 दिनों का मौसम पूर्वानुमान:\n\n${lines.join('\n')}`;
+      return `${weather.location} के लिए 3 दिनों का मौसम पूर्वानुमान:\n\n${lines.join('\n')}`;
     }
     if (language === 'hinglish') {
       const lines = forecast.map(
         (f) => `• ${f.day} (${f.date}): High ${f.high}°C / Low ${f.low}°C, ${f.condition.main}, Rain chance: ${f.rainProbability}%`
       );
-      return `Yeh raha ${weather.location} ka weekly forecast:\n\n${lines.join('\n')}`;
+      return `Yeh raha ${weather.location} ka 3-day forecast:\n\n${lines.join('\n')}`;
     }
     const lines = forecast.map(
       (f) => `• ${f.day} (${f.date}): High ${f.high}°C, Low ${f.low}°C, ${f.condition.main}, ${f.rainProbability}% rain chance`
     );
-    return `Here is the complete 7-day forecast for ${weather.location}:\n\n${lines.join('\n')}`;
+    return `Here is the 3-day forecast for ${weather.location}:\n\n${lines.join('\n')}`;
   }
 
   // --- HINDI (Devanagari) Fallback ---

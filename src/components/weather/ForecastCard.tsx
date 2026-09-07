@@ -73,7 +73,7 @@ export default function ForecastCard({ forecast, className = '' }: ForecastCardP
           </div>
           <div>
             <h3 className="text-sm font-bold text-white tracking-tight">
-              7-Day Meteorological Outlook
+              3-Day Meteorological Outlook
             </h3>
             <p className="text-xs text-slate-400">
               Projected daily high/low variances & atmospheric trends
@@ -183,8 +183,8 @@ export default function ForecastCard({ forecast, className = '' }: ForecastCardP
         </div>
       </div>
 
-      {/* 7-Day Forecast Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 relative z-10">
+      {/* 3-Day Forecast Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 relative z-10">
         {forecast.map((item, idx) => {
           const isSelected = idx === selectedDayIndex;
           const isToday = idx === 0;

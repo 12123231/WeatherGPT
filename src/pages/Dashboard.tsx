@@ -16,6 +16,7 @@ export default function Dashboard() {
   const {
     currentWeather,
     forecast,
+    hourlyForecast,
     risks,
     selectedLocation,
     loading,
@@ -70,7 +71,7 @@ export default function Dashboard() {
       ) : currentWeather ? (
         /* Primary 2-Column Dashboard Grid */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          {/* Left Column (Hero, Hourly, 7-Day) - spans 8 columns on large screens */}
+          {/* Left Column (Hero, Hourly, 3-Day) - spans 8 columns on large screens */}
           <div className="lg:col-span-8 flex flex-col gap-5">
             {/* 1. Hero Weather Card */}
             <HeroWeatherCard
@@ -81,9 +82,10 @@ export default function Dashboard() {
             {/* 2. Hourly Forecast Strip */}
             <HourlyForecastStrip
               weather={currentWeather}
+              hourlyForecast={hourlyForecast}
             />
 
-            {/* 3. 7-Day Forecast Grid */}
+            {/* 3. 3-Day Forecast Grid */}
             <DailyForecastGrid
               forecast={forecast}
             />

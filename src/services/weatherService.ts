@@ -1,6 +1,6 @@
 import type { CurrentWeather, ForecastDay, HourlyForecast, WeatherRisk, LocationData } from '../types/weather';
 import { mockWeatherData } from '../data/mockWeather';
-import { mockForecastData, mockHourlyForecast } from '../data/mockForecast';
+import { mockForecastData, generateMockHourlyForecast } from '../data/mockForecast';
 import { mockRisksData } from '../data/mockRisks';
 import { mockLocations } from '../data/mockLocations';
 import { API_BASE_URL } from '../config';
@@ -51,7 +51,7 @@ export async function getHourlyForecast(locationId: string): Promise<HourlyForec
     const res = await fetch(`${API_BASE_URL}/weather/hourly?location=${encodeURIComponent(locationId)}`);
     if (res.ok) {
       const json = await res.json();
-      if (json.success && json.data) {
+      if (json.success && json.data && Array.isArray(json.data) && json.data.length > 0) {
         return json.data;
       }
     }
@@ -59,7 +59,7 @@ export async function getHourlyForecast(locationId: string): Promise<HourlyForec
     // Graceful fallback
   }
 
-  return mockHourlyForecast;
+  return generateMockHourlyForecast(locationId);
 }
 
 export async function getWeatherRisks(locationId: string): Promise<WeatherRisk[]> {

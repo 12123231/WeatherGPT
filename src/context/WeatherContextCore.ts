@@ -1,9 +1,10 @@
 import { createContext } from 'react';
-import type { CurrentWeather, ForecastDay, WeatherRisk, LocationData, ConnectionStatus as ConnectionStatusType } from '../types/weather';
+import type { CurrentWeather, ForecastDay, HourlyForecast, WeatherRisk, LocationData, ConnectionStatus as ConnectionStatusType } from '../types/weather';
 
 export interface WeatherContextValue {
   currentWeather: CurrentWeather | null;
   forecast: ForecastDay[];
+  hourlyForecast: HourlyForecast[];
   risks: WeatherRisk[];
   selectedLocation: LocationData;
   locations: LocationData[];

@@ -27,7 +27,7 @@ export const mockChatResponses: Record<string, string> = {
   'hot': 'Yes, it\'s quite hot today! The temperature is 34°C but feels like 38°C due to humidity. The UV index is 8 (Very High). Please stay hydrated, avoid direct sun between 11 AM and 3 PM, and use sunscreen if going outdoors.',
   'wind': 'Current wind speed in New Delhi is 14 km/h from the southwest. This is a gentle breeze — comfortable for most outdoor activities. No strong wind advisories are active for today.',
   'humidity': 'Current humidity in New Delhi is 62%, which is moderately high. Combined with 34°C temperature, the feels-like temperature is 38°C. Stay hydrated and prefer air-conditioned spaces when possible.',
-  'forecast': 'Here\'s the 7-day outlook for New Delhi:\n\n• Today: 35°/27°, Partly Cloudy, 20% rain\n• Thu: 34°/26°, Rain likely, 65% rain\n• Fri: 32°/25°, Moderate rain, 80% rain\n• Sat: 33°/26°, Cloudy, 40% rain\n• Sun: 35°/27°, Partly Cloudy, 15% rain\n• Mon: 36°/28°, Sunny, 5% rain\n• Tue: 34°/27°, Partly Cloudy, 25% rain',
+  'forecast': 'Here\'s the 3-day outlook for New Delhi:\n\n• Today: 35°/27°, Partly Cloudy, 20% rain\n• Thu: 34°/26°, Rain likely, 65% rain\n• Fri: 32°/25°, Moderate rain, 80% rain',
 };
 
 export const defaultMockResponse = 'Based on current data, weather conditions in your area are within normal range. The temperature is moderate with partly cloudy skies. Would you like more specific information about temperature, rain probability, wind conditions, or weather risks?';
