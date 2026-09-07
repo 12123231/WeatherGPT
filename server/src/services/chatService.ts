@@ -451,7 +451,7 @@ Formatting Instructions:
 ${isMultiDay ? '- Format the complete 3-day forecast clearly with bullet points for every supplied day.' : '- Keep the response concise, practical, and easy to read (2-4 sentences).'}`;
 
   // Standard gemini models
-  const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+  const models = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
 
   for (const model of models) {
     try {
@@ -470,7 +470,7 @@ ${isMultiDay ? '- Format the complete 3-day forecast clearly with bullet points 
           ],
           generationConfig: {
             temperature: 0.2,
-            maxOutputTokens: 600,
+            maxOutputTokens: 2048,
           }
         }),
       });
