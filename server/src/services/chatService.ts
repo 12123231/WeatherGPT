@@ -146,7 +146,7 @@ const NON_LOCATION_WORDS = new Set([
   'warning', 'advisories', 'advice', 'help', 'info', 'information', 'details',
   'please', 'tell', 'give', 'show', 'check', 'know', 'can', 'will', 'what', 'how',
   'whats', "what's", 'hows', "how's", 'is', 'are', 'was', 'were', 'the', 'a', 'an',
-  'in', 'of', 'for', 'at', 'near', 'to', 'from', 'with', 'about', 'like',
+  'in', 'of', 'for', 'at', 'near', 'to', 'from', 'with', 'about', 'like', 'and', 'or', 'but', 'yet', 'nor',
   'it', 'its', "it's", 'me', 'my', 'us', 'our', 'you', 'your', 'going',
   'does', 'do', 'did', 'would', 'should', 'could', 'be', 'been', 'having', 'have', 'has',
   'any', 'some', 'much', 'many', 'very', 'too', 'also', 'just', 'so', 'as',
@@ -470,15 +470,15 @@ async function resolveLocationCandidate(candidate: string): Promise<string | nul
       const match = searchResults.find(
         (loc) =>
           loc.name.toLowerCase() === lower ||
-          loc.name.toLowerCase().startsWith(lower) ||
-          (lower.length >= 4 && loc.name.toLowerCase().includes(lower))
+          (lower.length >= 4 && loc.name.toLowerCase().startsWith(lower)) ||
+          (lower.length >= 5 && loc.name.toLowerCase().includes(lower))
       );
       if (match) {
         return match.name;
       }
     }
   } catch {
-    if (candidate.length >= 3 && !NON_LOCATION_WORDS.has(lower)) {
+    if (candidate.length >= 4 && !NON_LOCATION_WORDS.has(lower)) {
       return candidate;
     }
   }
