@@ -50,6 +50,16 @@ export default function HourlyForecastStrip({
   // Real-time clock tick: check target location's local time every 15 seconds to roll hours forward
   useEffect(() => {
     const checkLocalTime = () => {
+      if (weather?.localtime) {
+        const parts = weather.localtime.split(' ');
+        if (parts[1]) {
+          const parsed = parseInt(parts[1].split(':')[0], 10);
+          if (!isNaN(parsed)) {
+            setCurrentLocalHour((prev) => (prev !== parsed ? parsed : prev));
+            return;
+          }
+        }
+      }
       const { hour } = getLocalTimeInfo(targetTimezone);
       setCurrentLocalHour((prev) => (prev !== hour ? hour : prev));
     };
@@ -57,7 +67,7 @@ export default function HourlyForecastStrip({
     checkLocalTime();
     const interval = setInterval(checkLocalTime, 15000);
     return () => clearInterval(interval);
-  }, [targetTimezone]);
+  }, [targetTimezone, weather?.localtime]);
 
   // Generate or slice 8 dynamic consecutive hourly slots starting with "Now"
   const hourlySlots = useMemo<HourlySlot[]>(() => {
@@ -112,8 +122,8 @@ export default function HourlyForecastStrip({
 
           slots.push({
             time: timeLabel,
-            temp: Math.round(h.temperature),
-            iconType,
+            temp: i === 0 && weather ? Math.round(weather.temperature) : Math.round(h.temperature),
+            iconType: i === 0 && weather ? resolveIconType(weather.condition?.icon || '', isDay) : iconType,
             rainChance: typeof h.rainProbability === 'number' && h.rainProbability > 0 ? h.rainProbability : undefined,
             hour: hourNum,
           });

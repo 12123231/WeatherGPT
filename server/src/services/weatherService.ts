@@ -189,6 +189,7 @@ export async function getCurrentWeather(locationQuery: string): Promise<{ data: 
           uvIndex: Math.round(json.current.uv ?? 0),
           lastUpdated: json.current.last_updated ? new Date(json.current.last_updated).toISOString() : new Date().toISOString(),
           timezone: json.location.tz_id || 'Asia/Kolkata',
+          localtime: json.location.localtime || '',
         };
         return { data: liveData, isFallback: false };
       }
@@ -297,49 +298,100 @@ export async function getHourlyForecast(locationQuery: string): Promise<{ data: 
   if (apiKey) {
     try {
       const json = await fetchWeatherApiData(query, apiKey);
-      if (json && json.forecast?.forecastday?.[0]?.hour) {
-        const todayHours = json.forecast.forecastday[0].hour;
-        const tomorrowHours = json.forecast.forecastday[1]?.hour || [];
-        const allHours = [...todayHours, ...tomorrowHours];
+      if (json && json.forecast?.forecastday) {
+        // Collect all hours across all 3 days in chronological order (72 hours total)
+        const allHours: any[] = [];
+        for (const fd of json.forecast.forecastday) {
+          if (Array.isArray(fd.hour)) {
+            allHours.push(...fd.hour);
+          }
+        }
 
-        // Determine current hour in the target location
+        // Determine current local date & hour from location.localtime (e.g. "2026-09-08 12:05")
+        let localDateStr = '';
         let currentHour = new Date().getHours();
         if (json.location?.localtime) {
           const parts = json.location.localtime.split(' ');
+          localDateStr = parts[0] || '';
           if (parts[1]) {
             const hourPart = parseInt(parts[1].split(':')[0], 10);
             if (!isNaN(hourPart)) currentHour = hourPart;
           }
         }
 
-        // Take next 6-8 intervals spaced across upcoming hours (e.g. current hour + 0, 3, 6, 9, 12, 15)
-        const intervals = [0, 3, 6, 9, 12, 15];
-        const sampled: HourlyForecast[] = intervals.map((offset) => {
-          const targetIndex = currentHour + offset;
-          const item = allHours[targetIndex] || todayHours[todayHours.length - 1];
-
-          let timeLabel: string;
+        // Find the index in allHours corresponding to currentHour on localDateStr
+        let startIndex = allHours.findIndex((item: any) => {
+          if (localDateStr && item.time) {
+            return item.time.startsWith(`${localDateStr} ${String(currentHour).padStart(2, '0')}:`);
+          }
           if (item.time) {
-            const timePart = item.time.split(' ')[1] || item.time;
-            const hourNum = parseInt(timePart.split(':')[0], 10);
-            if (offset === 0) {
-              timeLabel = 'Now';
-            } else if (hourNum === 0) {
-              timeLabel = '12 AM';
-            } else if (hourNum === 12) {
-              timeLabel = '12 PM';
-            } else if (hourNum > 12) {
-              timeLabel = `${hourNum - 12} PM`;
-            } else {
-              timeLabel = `${hourNum} AM`;
+            const h = parseInt(item.time.split(' ')[1]?.split(':')[0] || '', 10);
+            return h === currentHour;
+          }
+          return false;
+        });
+
+        if (startIndex === -1) {
+          startIndex = 0;
+        }
+
+        const hourlyList: HourlyForecast[] = [];
+        const currentItem = allHours[startIndex] || allHours[0];
+
+        // Card 0: "Now" represents live current weather for the searched location
+        const currentRainProb = typeof currentItem?.chance_of_rain === 'number'
+          ? currentItem.chance_of_rain
+          : typeof currentItem?.daily_chance_of_rain === 'number'
+          ? currentItem.daily_chance_of_rain
+          : (currentItem?.will_it_rain ? 100 : 0);
+
+        hourlyList.push({
+          time: 'Now',
+          temperature: Math.round(json.current.temp_c),
+          condition: {
+            main: json.current.condition?.text || 'Clear',
+            description: json.current.condition?.text || '',
+            icon: mapWeatherApiConditionToIcon(json.current.condition?.text || ''),
+          },
+          rainProbability: currentRainProb,
+          hour: currentHour,
+          date: currentItem?.time ? currentItem.time.split(' ')[0] : localDateStr,
+          isDay: json.current.is_day === 1,
+        });
+
+        // Following cards: next upcoming consecutive hours (startIndex + 1, startIndex + 2, ...)
+        // Take up to 23 following hours (total 24 hours available)
+        for (let offset = 1; offset < 24 && (startIndex + offset) < allHours.length; offset++) {
+          const item = allHours[startIndex + offset];
+          let hourNum = (currentHour + offset) % 24;
+          let dateStr = '';
+          if (item.time) {
+            const parts = item.time.split(' ');
+            dateStr = parts[0] || '';
+            if (parts[1]) {
+              const parsedH = parseInt(parts[1].split(':')[0], 10);
+              if (!isNaN(parsedH)) hourNum = parsedH;
             }
-          } else {
-            timeLabel = `${((currentHour + offset) % 24)}:00`;
           }
 
-          const rainProb = typeof item.chance_of_rain === 'number' ? item.chance_of_rain : 0;
+          let timeLabel: string;
+          if (hourNum === 0) {
+            timeLabel = '12 AM';
+          } else if (hourNum === 12) {
+            timeLabel = '12 PM';
+          } else if (hourNum > 12) {
+            timeLabel = `${hourNum - 12} PM`;
+          } else {
+            timeLabel = `${hourNum} AM`;
+          }
 
-          return {
+          const rainProb = typeof item.chance_of_rain === 'number'
+            ? item.chance_of_rain
+            : typeof item.daily_chance_of_rain === 'number'
+            ? item.daily_chance_of_rain
+            : (item.will_it_rain ? 100 : 0);
+
+          hourlyList.push({
             time: timeLabel,
             temperature: Math.round(item.temp_c),
             condition: {
@@ -348,10 +400,13 @@ export async function getHourlyForecast(locationQuery: string): Promise<{ data: 
               icon: mapWeatherApiConditionToIcon(item.condition?.text || ''),
             },
             rainProbability: rainProb,
-          };
-        });
+            hour: hourNum,
+            date: dateStr,
+            isDay: item.is_day === 1,
+          });
+        }
 
-        return { data: sampled, isFallback: false };
+        return { data: hourlyList, isFallback: false };
       }
     } catch (error) {
       console.error(`[WeatherService] getHourlyForecast error for '${query}':`, error instanceof Error ? error.message : error);
