@@ -6,6 +6,7 @@ import * as chatService from '../services/chatService';
 export function useChat(locationId: string) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialChatMessages);
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationId] = useState(() => `chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -19,7 +20,7 @@ export function useChat(locationId: string) {
       setIsLoading(true);
 
       try {
-        const response = await chatService.sendChatMessage(text, locationId);
+        const response = await chatService.sendChatMessage(text, locationId, conversationId);
         setMessages((prev) => [...prev, response]);
       } catch (err: unknown) {
         const errorText = err instanceof Error ? err.message : 'Unknown network/API error';
@@ -35,7 +36,7 @@ export function useChat(locationId: string) {
         setIsLoading(false);
       }
     },
-    [locationId]
+    [locationId, conversationId]
   );
 
   return { messages, isLoading, sendMessage, suggestedQuestions };

@@ -4,9 +4,17 @@ import { API_BASE_URL } from '../config';
 /**
  * Chat service layer connected to WeatherGPT Backend.
  */
-export async function sendChatMessage(userMessage: string, locationId: string = 'new-delhi'): Promise<ChatMessage> {
+export async function sendChatMessage(
+  userMessage: string,
+  locationId: string = 'new-delhi',
+  conversationId?: string
+): Promise<ChatMessage> {
   const url = `${API_BASE_URL}/chat`;
-  console.log(`[WeatherGPT Chat] Sending POST request to ${url} with payload:`, { message: userMessage, location: locationId });
+  console.log(`[WeatherGPT Chat] Sending POST request to ${url} with payload:`, {
+    message: userMessage,
+    location: locationId,
+    conversationId,
+  });
 
   try {
     const res = await fetch(url, {
@@ -17,6 +25,7 @@ export async function sendChatMessage(userMessage: string, locationId: string = 
       body: JSON.stringify({
         message: userMessage,
         location: locationId,
+        conversationId,
       }),
     });
 
