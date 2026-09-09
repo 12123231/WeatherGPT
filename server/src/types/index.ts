@@ -20,6 +20,7 @@ export interface CurrentWeather {
   lastUpdated: string;
   timezone?: string;
   localtime?: string;
+  gust?: number;
 }
 
 export interface ForecastDay {
@@ -38,6 +39,7 @@ export interface HourlyForecast {
   temperature: number;
   condition: WeatherCondition;
   rainProbability: number;
+  precipitation?: number;
   hour?: number;
   date?: string;
   isDay?: boolean;

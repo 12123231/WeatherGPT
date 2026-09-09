@@ -8,6 +8,9 @@ import WindMapCard from '../components/weather/WindMapCard';
 import LocationSearch from '../components/map/LocationSearch';
 import LoadingState from '../components/common/LoadingState';
 import ErrorState from '../components/common/ErrorState';
+import WeatherAlertCard from '../components/weather/WeatherAlertCard';
+import SevereWeatherPopup from '../components/common/SevereWeatherPopup';
+import { useAlerts } from '../hooks/useAlerts';
 import { formatCurrentDateTime } from '../utils/formatters';
 import { MapPin, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -25,8 +28,13 @@ export default function Dashboard() {
     refresh,
   } = useWeatherContext();
 
+  const { alertResult, popupAlert, dismissPopup } = useAlerts();
+
   return (
     <div className="p-3 sm:p-5 lg:p-7 max-w-[1400px] mx-auto w-full space-y-5 select-none">
+      {/* Severe Weather Serious Alert Popup (RED alerts only) */}
+      <SevereWeatherPopup alert={popupAlert} onDismiss={dismissPopup} />
+
       {/* Top Header Bar */}
       <div className="flex items-center justify-between gap-4 px-1">
         {/* Left: Location Pin & Date */}
@@ -65,7 +73,7 @@ export default function Dashboard() {
 
       {/* Main Content States */}
       {loading && !currentWeather ? (
-        <LoadingState message="Fetching live meteorological telemetry..." />
+        <LoadingState message="Fetching live weather data..." />
       ) : error && !currentWeather ? (
         <ErrorState message={error} onRetry={refresh} />
       ) : currentWeather ? (
@@ -91,8 +99,13 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Right Column (Live Conditions, Recently Searched, Wind Map) - spans 4 columns on large screens */}
+          {/* Right Column (Alerts, Live Conditions, Recently Searched, Wind Map) - spans 4 columns on large screens */}
           <div className="lg:col-span-4 flex flex-col gap-5">
+            {/* 0. Weather Alert & Advisory Card (Dedicated card always present) */}
+            <WeatherAlertCard
+              alertResult={alertResult}
+            />
+
             {/* 1. Live Conditions Card */}
             <LiveConditionsCard
               weather={currentWeather}

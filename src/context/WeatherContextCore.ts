@@ -14,6 +14,7 @@ export interface WeatherContextValue {
   refresh: () => void;
   connectionStatus: ConnectionStatusType;
   lastSynced: string;
+  isLive: boolean;
 }
 
 export const WeatherContext = createContext<WeatherContextValue | null>(null);

@@ -11,12 +11,17 @@ import { API_BASE_URL } from '../config';
  */
 
 export async function getCurrentWeather(locationId: string): Promise<CurrentWeather> {
+  const result = await getCurrentWeatherWithMeta(locationId);
+  return result.data;
+}
+
+export async function getCurrentWeatherWithMeta(locationId: string): Promise<{ data: CurrentWeather; isLive: boolean }> {
   try {
     const res = await fetch(`${API_BASE_URL}/weather/current?location=${encodeURIComponent(locationId)}`);
     if (res.ok) {
       const json = await res.json();
       if (json.success && json.data) {
-        return json.data;
+        return { data: json.data, isLive: json.isFallback === false };
       }
     }
   } catch {
@@ -25,7 +30,7 @@ export async function getCurrentWeather(locationId: string): Promise<CurrentWeat
 
   const data = mockWeatherData[locationId] || mockWeatherData['new-delhi'];
   if (!data) throw new Error(`No weather data for location: ${locationId}`);
-  return data;
+  return { data, isLive: false };
 }
 
 export async function getForecast(locationId: string): Promise<ForecastDay[]> {

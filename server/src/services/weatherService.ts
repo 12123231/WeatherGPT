@@ -190,6 +190,7 @@ export async function getCurrentWeather(locationQuery: string): Promise<{ data: 
           lastUpdated: json.current.last_updated ? new Date(json.current.last_updated).toISOString() : new Date().toISOString(),
           timezone: json.location.tz_id || 'Asia/Kolkata',
           localtime: json.location.localtime || '',
+          gust: typeof json.current.gust_kph === 'number' ? Math.round(json.current.gust_kph) : undefined,
         };
         return { data: liveData, isFallback: false };
       }
@@ -354,6 +355,7 @@ export async function getHourlyForecast(locationQuery: string): Promise<{ data: 
             icon: mapWeatherApiConditionToIcon(json.current.condition?.text || ''),
           },
           rainProbability: currentRainProb,
+          precipitation: typeof currentItem?.precip_mm === 'number' ? currentItem.precip_mm : (typeof json.current?.precip_mm === 'number' ? json.current.precip_mm : 0),
           hour: currentHour,
           date: currentItem?.time ? currentItem.time.split(' ')[0] : localDateStr,
           isDay: json.current.is_day === 1,
@@ -400,6 +402,7 @@ export async function getHourlyForecast(locationQuery: string): Promise<{ data: 
               icon: mapWeatherApiConditionToIcon(item.condition?.text || ''),
             },
             rainProbability: rainProb,
+            precipitation: typeof item.precip_mm === 'number' ? item.precip_mm : 0,
             hour: hourNum,
             date: dateStr,
             isDay: item.is_day === 1,

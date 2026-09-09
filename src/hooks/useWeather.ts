@@ -11,6 +11,7 @@ interface UseWeatherState {
   locations: LocationData[];
   loading: boolean;
   error: string | null;
+  isLive: boolean;
 }
 
 export function useWeather() {
@@ -25,22 +26,32 @@ export function useWeather() {
     locations: allLocations,
     loading: true,
     error: null,
+    isLive: false,
   });
 
   const loadWeatherData = useCallback(async (locationId: string) => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
-      const [currentWeather, forecast, hourlyForecast, risks] = await Promise.all([
-        weatherService.getCurrentWeather(locationId),
+      const [currentRes, forecast, hourlyForecast, risks] = await Promise.all([
+        weatherService.getCurrentWeatherWithMeta(locationId),
         weatherService.getForecast(locationId),
         weatherService.getHourlyForecast(locationId),
         weatherService.getWeatherRisks(locationId),
       ]);
-      setState((prev) => ({ ...prev, currentWeather, forecast, hourlyForecast, risks, loading: false }));
+      setState((prev) => ({
+        ...prev,
+        currentWeather: currentRes.data,
+        isLive: currentRes.isLive,
+        forecast,
+        hourlyForecast,
+        risks,
+        loading: false,
+      }));
     } catch (err) {
       setState((prev) => ({
         ...prev,
         loading: false,
+        isLive: false,
         error: err instanceof Error ? err.message : 'Failed to load weather data',
       }));
     }
