@@ -42,8 +42,8 @@ export default function LocationSearch({
       if (variant === 'icon') {
         const rect = containerRef.current?.getBoundingClientRect();
         if (!rect) return;
-        const width = 320;
-        const left = Math.max(16, Math.min(rect.right - width, window.innerWidth - width - 16));
+        const width = Math.min(320, window.innerWidth - 24);
+        const left = Math.max(12, Math.min(rect.right - width, window.innerWidth - width - 12));
         setDropdownStyle({
           position: 'fixed',
           top: rect.bottom + 8,

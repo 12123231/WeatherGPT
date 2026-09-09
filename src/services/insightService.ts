@@ -1,4 +1,4 @@
-import type { CurrentWeather, HourlyForecast, ForecastDay } from '../types/weather';
+﻿import type { CurrentWeather, HourlyForecast, ForecastDay } from '../types/weather';
 
 export type ActivityCategory = 'Favorable' | 'Cautious' | 'Unfavorable';
 
@@ -26,7 +26,7 @@ export interface WeatherInsightResult {
 
 /**
  * Deterministic Meteorological Intelligence Engine.
- * 
+ *
  * Generates user-facing insights, recommendations, and windows using ONLY verified
  * live telemetry already in memory. Zero external LLM calls. Zero hallucination risk.
  */
@@ -42,7 +42,7 @@ export function generateWeatherInsights(
     return {
       dataAvailable: false,
       locationName,
-      dailySummary: 'AI Weather Insights unavailable � Live weather data offline.',
+      dailySummary: 'AI Weather Insights unavailable — Live weather data offline.',
       activityAdvice: {
         score: 0,
         category: 'Unfavorable',
@@ -63,8 +63,14 @@ export function generateWeatherInsights(
   const humidity = currentWeather.humidity ?? 0;
   const uvIndex = currentWeather.uvIndex ?? 0;
 
-  // Next 12 hours timeline (slice up to 12 hours)
+  // Next 12 hours timeline (up to 13 slots: current hour + next 12)
   const next12Hours = (hourlyForecast || []).slice(0, 13);
+
+  // Determine current local hour from first slot if available
+  const currentLocalHour: number =
+    next12Hours.length > 0 && typeof next12Hours[0].hour === 'number'
+      ? next12Hours[0].hour
+      : 12;
 
   // ----------------------------------------------------
   // A. dailySummary: Concise Plain-Language Weather Summary
@@ -80,25 +86,25 @@ export function generateWeatherInsights(
 
   let rainSentence = '';
   if (maxRainProbIn12h >= 60 || maxPrecipIn12h >= 2) {
-    rainSentence = `Rain is likely during the day with up to ${maxRainProbIn12h}% precipitation chance.`;
+    rainSentence = `Rain is likely over the next several hours with up to ${maxRainProbIn12h}% precipitation chance.`;
   } else if (maxRainProbIn12h >= 30) {
-    rainSentence = `Passing showers are possible with a ${maxRainProbIn12h}% rain probability.`;
+    rainSentence = `Passing showers are possible in the coming hours with a ${maxRainProbIn12h}% rain probability.`;
   } else {
-    rainSentence = 'Low chance of rain throughout the day.';
+    rainSentence = 'Low chance of rain in the coming hours.';
   }
 
   let tempSentence = '';
   if (highTemp >= 40) {
-    tempSentence = `Extreme heat today reaching up to ${highTemp}�C.`;
+    tempSentence = `Extreme heat today reaching up to ${highTemp}°C.`;
   } else if (highTemp >= 33) {
-    tempSentence = `Warm conditions expected today with a high of ${highTemp}�C (low ${lowTemp}�C).`;
+    tempSentence = `Warm conditions expected today with a high of ${highTemp}°C (low ${lowTemp}°C).`;
   } else if (highTemp <= 15) {
-    tempSentence = `Chilly weather persisting with a high of ${highTemp}�C and overnight lows near ${lowTemp}�C.`;
+    tempSentence = `Chilly weather persisting with a high of ${highTemp}°C and overnight lows near ${lowTemp}°C.`;
   } else {
-    tempSentence = `Comfortable temperatures expected, reaching ${highTemp}�C with lows near ${lowTemp}�C.`;
+    tempSentence = `Comfortable temperatures expected, reaching ${highTemp}°C with lows near ${lowTemp}°C.`;
   }
 
-  const dailySummary = `${conditionMain} in ${targetLocation} at ${currentTemp}�C. ${tempSentence} ${rainSentence}`;
+  const dailySummary = `${conditionMain} in ${targetLocation} at ${currentTemp}°C. ${tempSentence} ${rainSentence}`;
 
   // ----------------------------------------------------
   // B. activityAdvice: Outdoor Activity Score (0 - 100)
@@ -215,6 +221,18 @@ export function generateWeatherInsights(
   // ----------------------------------------------------
   const keyWindows: KeyWindow[] = [];
 
+  // Helper to extract numeric hour 0-23
+  const getHourNum = (h: HourlyForecast): number => {
+    if (typeof h.hour === 'number') return h.hour;
+    if (h.time === 'Now') return currentLocalHour;
+    const parts = h.time.split(' ');
+    let num = parseInt(parts[0], 10);
+    if (isNaN(num)) return 12;
+    if (parts[1] === 'PM' && num < 12) num += 12;
+    if (parts[1] === 'AM' && num === 12) num = 0;
+    return num;
+  };
+
   // 1. Rain Window (if supported by hourly data)
   const rainyHours = next12Hours.filter(
     (h) => (h.rainProbability ?? 0) >= 40 || (h.precipitation ?? 0) > 0.5
@@ -222,7 +240,10 @@ export function generateWeatherInsights(
   if (rainyHours.length > 0) {
     const firstRain = rainyHours[0];
     const lastRain = rainyHours[rainyHours.length - 1];
-    const timeRange = firstRain.time === lastRain.time ? firstRain.time : `${firstRain.time} � ${lastRain.time}`;
+    const timeRange =
+      firstRain.time === lastRain.time
+        ? firstRain.time
+        : `${firstRain.time} – ${lastRain.time}`;
     keyWindows.push({
       type: 'rain',
       label: 'Rain likely',
@@ -240,27 +261,37 @@ export function generateWeatherInsights(
   if (peakHeatHours.length > 0 && highestHourlyTemp >= 30) {
     const firstHeat = peakHeatHours[0];
     const lastHeat = peakHeatHours[peakHeatHours.length - 1];
-    const timeRange = firstHeat.time === lastHeat.time ? firstHeat.time : `${firstHeat.time} � ${lastHeat.time}`;
+    const timeRange =
+      firstHeat.time === lastHeat.time
+        ? firstHeat.time
+        : `${firstHeat.time} – ${lastHeat.time}`;
     keyWindows.push({
       type: 'heat',
       label: 'Peak heat',
       timeRange,
-      detail: `Temperatures peak around ${highestHourlyTemp}�C.`,
+      detail: `Temperatures peak around ${highestHourlyTemp}°C.`,
     });
   }
 
   // 3. Best Outdoor Window
-  // Find continuous hours with rain prob < 30%, temp between 18�C and 32�C, wind < 25 km/h
+  // STRICT DAYTIME ENFORCEMENT:
+  // Must only select valid future/relevant local daytime hours (06:00 to 21:00, isDay !== false).
+  // Never select nighttime hours (e.g. 11 PM - 3 AM) merely because the temperature is mild.
   const idealHours = next12Hours.filter((h) => {
+    const hour = getHourNum(h);
+    const isDaytime = hour >= 6 && hour <= 21 && h.isDay !== false;
     const isComfortable = h.temperature >= 18 && h.temperature <= 32;
     const isDry = (h.rainProbability ?? 0) < 30;
-    return isComfortable && isDry;
+    return isDaytime && isComfortable && isDry;
   });
 
   if (idealHours.length > 0) {
     const firstIdeal = idealHours[0];
     const lastIdeal = idealHours[idealHours.length - 1];
-    const timeRange = firstIdeal.time === lastIdeal.time ? firstIdeal.time : `${firstIdeal.time} � ${lastIdeal.time}`;
+    const timeRange =
+      firstIdeal.time === lastIdeal.time
+        ? firstIdeal.time
+        : `${firstIdeal.time} – ${lastIdeal.time}`;
     keyWindows.push({
       type: 'outdoor',
       label: 'Best outside',
@@ -269,17 +300,23 @@ export function generateWeatherInsights(
     });
   }
 
-  // 4. High UV Window (Daytime hours around midday if current UV is elevated)
-  if (uvIndex >= 6) {
-    const daytimeMiddayHours = next12Hours.filter((h) => {
-      const hour = h.hour ?? 12;
-      return hour >= 11 && hour <= 15;
+  // 4. High UV Window (midday 11:00-15:00)
+  // STRICT TEMPORAL ENFORCEMENT:
+  // After 15:00 local time, the midday solar peak for today has already passed.
+  // Do NOT show a past midday period. Only show if currentLocalHour < 15 and uvIndex >= 6.
+  if (uvIndex >= 6 && currentLocalHour < 15) {
+    const upcomingMiddayHours = next12Hours.filter((h) => {
+      const hour = getHourNum(h);
+      return hour >= 11 && hour <= 15 && h.isDay !== false;
     });
 
-    if (daytimeMiddayHours.length > 0) {
-      const firstUV = daytimeMiddayHours[0];
-      const lastUV = daytimeMiddayHours[daytimeMiddayHours.length - 1];
-      const timeRange = firstUV.time === lastUV.time ? firstUV.time : `${firstUV.time} � ${lastUV.time}`;
+    if (upcomingMiddayHours.length > 0) {
+      const firstUV = upcomingMiddayHours[0];
+      const lastUV = upcomingMiddayHours[upcomingMiddayHours.length - 1];
+      const timeRange =
+        firstUV.time === lastUV.time
+          ? firstUV.time
+          : `${firstUV.time} – ${lastUV.time}`;
       keyWindows.push({
         type: 'uv',
         label: 'High UV',

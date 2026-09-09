@@ -34,29 +34,29 @@ export default function Dashboard() {
   const { insightResult } = useWeatherInsight();
 
   return (
-    <div className="p-3 sm:p-5 lg:p-7 max-w-[1400px] mx-auto w-full space-y-5 select-none">
+    <div className="p-3 sm:p-5 lg:p-7 max-w-[1400px] mx-auto w-full max-w-full overflow-x-hidden space-y-5 select-none">
       {/* Severe Weather Serious Alert Popup (RED alerts only) */}
       <SevereWeatherPopup alert={popupAlert} onDismiss={dismissPopup} />
 
       {/* Top Header Bar */}
       <div className="flex items-center justify-between gap-4 px-1">
         {/* Left: Location Pin & Date */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="w-8 h-8 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-white shrink-0 shadow-sm">
             <MapPin size={16} className="text-white fill-white" />
           </div>
-          <div>
-            <h1 className="text-base sm:text-lg font-semibold text-white tracking-tight leading-tight">
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-lg font-semibold text-white tracking-tight leading-tight truncate">
               {currentWeather ? `${currentWeather.location}, ${currentWeather.country}` : `${selectedLocation.name}, ${selectedLocation.country}`}
             </h1>
-            <p className="text-xs text-slate-400 font-normal mt-0.5">
+            <p className="text-xs text-slate-400 font-normal mt-0.5 truncate">
               {formatCurrentDateTime()}
             </p>
           </div>
         </div>
 
         {/* Right: Search Icon Button & Action Button */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 shrink-0">
           <LocationSearch
             selectedLocation={selectedLocation}
             onSelectLocation={setLocation}
@@ -65,7 +65,7 @@ export default function Dashboard() {
 
           <Link
             to="/chat"
-            className="px-4 py-2 rounded-full bg-[#26272c] hover:bg-[#303138] border border-white/[0.08] text-xs font-medium text-slate-200 hover:text-white transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 rounded-full bg-[#26272c] hover:bg-[#303138] border border-white/[0.08] text-xs font-medium text-slate-200 hover:text-white transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0"
           >
             <Sparkles size={13} className="text-sky-300" />
             <span className="hidden sm:inline">WeatherGPT Assistant</span>
@@ -81,9 +81,9 @@ export default function Dashboard() {
         <ErrorState message={error} onRetry={refresh} />
       ) : currentWeather ? (
         /* Primary 2-Column Dashboard Grid */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start w-full max-w-full min-w-0">
           {/* Left Column (Hero, AI Insight, Hourly, 3-Day) - spans 8 columns on large screens */}
-          <div className="lg:col-span-8 flex flex-col gap-5">
+          <div className="lg:col-span-8 flex flex-col gap-5 w-full min-w-0 max-w-full">
             {/* 1. Hero Weather Card */}
             <HeroWeatherCard
               weather={currentWeather}
@@ -108,7 +108,7 @@ export default function Dashboard() {
           </div>
 
           {/* Right Column (Alerts, Live Conditions, Recently Searched, Wind Map) - spans 4 columns on large screens */}
-          <div className="lg:col-span-4 flex flex-col gap-5">
+          <div className="lg:col-span-4 flex flex-col gap-5 w-full min-w-0 max-w-full">
             {/* 0. Weather Alert & Advisory Card (Dedicated card always present) */}
             <WeatherAlertCard
               alertResult={alertResult}

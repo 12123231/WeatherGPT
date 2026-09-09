@@ -43,7 +43,7 @@ export default function WeatherInsightCard({
               <span>AI Weather Insight</span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              AI Weather Insights unavailable � Live weather data offline.
+              AI Weather Insights unavailable — Live weather data offline.
             </p>
           </div>
         </div>
@@ -79,7 +79,7 @@ export default function WeatherInsightCard({
         </div>
 
         <span className="text-[11px] text-slate-400 font-medium">
-          {locationName} � Live Weather Data
+          {locationName} · Live Weather Data
         </span>
       </div>
 
@@ -99,7 +99,7 @@ export default function WeatherInsightCard({
                 Outdoor Activity
               </span>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${scoreColor}`}>
-                {activityAdvice.score}/100 � {scoreCategory}
+                {activityAdvice.score}/100 · {scoreCategory}
               </span>
             </div>
             <p className="text-xs text-slate-400 leading-normal">
@@ -118,7 +118,7 @@ export default function WeatherInsightCard({
             <div className="space-y-1">
               {clothingAdvice.map((item, idx) => (
                 <p key={idx} className="text-xs text-slate-400 flex items-start gap-1.5 leading-normal">
-                  <span className="text-sky-400 text-xs leading-none mt-1">�</span>
+                  <span className="text-sky-400 text-xs leading-none mt-1">•</span>
                   <span>{item}</span>
                 </p>
               ))}

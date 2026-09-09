@@ -47,7 +47,7 @@ export function useWeatherInsight(): UseWeatherInsightReturn {
       return {
         dataAvailable: false,
         locationName: selectedLocation.name,
-        dailySummary: 'AI Weather Insights unavailable � Live weather data offline.',
+        dailySummary: 'AI Weather Insights unavailable — Live weather data offline.',
         activityAdvice: {
           score: 0,
           category: 'Unfavorable',
