@@ -9,8 +9,10 @@ import LocationSearch from '../components/map/LocationSearch';
 import LoadingState from '../components/common/LoadingState';
 import ErrorState from '../components/common/ErrorState';
 import WeatherAlertCard from '../components/weather/WeatherAlertCard';
+import WeatherInsightCard from '../components/weather/WeatherInsightCard';
 import SevereWeatherPopup from '../components/common/SevereWeatherPopup';
 import { useAlerts } from '../hooks/useAlerts';
+import { useWeatherInsight } from '../hooks/useWeatherInsight';
 import { formatCurrentDateTime } from '../utils/formatters';
 import { MapPin, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -29,6 +31,7 @@ export default function Dashboard() {
   } = useWeatherContext();
 
   const { alertResult, popupAlert, dismissPopup } = useAlerts();
+  const { insightResult } = useWeatherInsight();
 
   return (
     <div className="p-3 sm:p-5 lg:p-7 max-w-[1400px] mx-auto w-full space-y-5 select-none">
@@ -79,12 +82,17 @@ export default function Dashboard() {
       ) : currentWeather ? (
         /* Primary 2-Column Dashboard Grid */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          {/* Left Column (Hero, Hourly, 3-Day) - spans 8 columns on large screens */}
+          {/* Left Column (Hero, AI Insight, Hourly, 3-Day) - spans 8 columns on large screens */}
           <div className="lg:col-span-8 flex flex-col gap-5">
             {/* 1. Hero Weather Card */}
             <HeroWeatherCard
               weather={currentWeather}
               todayForecast={forecast[0]}
+            />
+
+            {/* 1.5. AI Weather Insight Card */}
+            <WeatherInsightCard
+              insightResult={insightResult}
             />
 
             {/* 2. Hourly Forecast Strip */}
