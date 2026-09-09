@@ -1,12 +1,33 @@
+﻿import { useMemo } from 'react';
 import type { CurrentWeather, ForecastDay } from '../../types/weather';
 import { formatTemp } from '../../utils/formatters';
+import { getWeatherMood } from '../../utils/weatherMood';
+
 import stormBackdrop from '../../assets/storm_backdrop.jpg';
+import clearBackdrop from '../../assets/moods/clear.svg';
+import cloudyBackdrop from '../../assets/moods/cloudy.svg';
+import rainBackdrop from '../../assets/moods/rain.svg';
+import fogBackdrop from '../../assets/moods/fog.svg';
+import snowBackdrop from '../../assets/moods/snow.svg';
+import dustBackdrop from '../../assets/moods/dust.svg';
+import nightBackdrop from '../../assets/moods/night.svg';
 
 interface HeroWeatherCardProps {
   weather: CurrentWeather;
   todayForecast?: ForecastDay;
   className?: string;
 }
+
+const MOOD_BACKDROPS: Record<string, string> = {
+  clear: clearBackdrop,
+  cloudy: cloudyBackdrop,
+  rain: rainBackdrop,
+  thunderstorm: stormBackdrop,
+  fog: fogBackdrop,
+  snow: snowBackdrop,
+  dust: dustBackdrop,
+  night: nightBackdrop,
+};
 
 export default function HeroWeatherCard({
   weather,
@@ -22,15 +43,23 @@ export default function HeroWeatherCard({
     ? `with ${weather.condition.description.toLowerCase()}`
     : 'with partly cloudy';
 
+  // Reuse existing centralized weather mood detection
+  const mood = useMemo(() => getWeatherMood(weather), [weather]);
+  const activeBackdrop = MOOD_BACKDROPS[mood.id] || cloudyBackdrop;
+
   return (
     <div
       className={`relative overflow-hidden rounded-[28px] border border-white/[0.08] shadow-[0_12px_40px_rgba(0,0,0,0.4)] min-h-[250px] sm:min-h-[280px] p-6 sm:p-8 flex flex-col justify-between select-none ${className}`}
-      style={{
-        backgroundImage: `url(${stormBackdrop})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center 40%',
-      }}
     >
+      {/* Dynamic Mood Background Layer with subtle crossfade */}
+      <div
+        className="absolute inset-0 bg-cover bg-center transition-all duration-700 ease-out pointer-events-none"
+        style={{
+          backgroundImage: `url(${activeBackdrop})`,
+          backgroundPosition: 'center 40%',
+        }}
+      />
+
       {/* Dark Subtle Vignette & Gradient Overlays */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/35 to-black/55 pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 pointer-events-none" />
