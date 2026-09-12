@@ -17,10 +17,11 @@ export default function MapPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel rounded-2xl p-4 sm:p-5 border border-white/[0.07] relative z-30">
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-            Interactive Weather Map & Spatial Radar
+            Interactive Weather Map
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
-            Geographical radar matrices & telemetry stations for <strong className="text-slate-200 font-medium">{selectedLocation.name}</strong>
+            Mappls India-focused map for{' '}
+            <strong className="text-slate-200 font-medium">{selectedLocation.name}</strong>
           </p>
         </div>
 
@@ -33,7 +34,7 @@ export default function MapPage() {
 
       {/* Main Map Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Main Radar View Panel */}
+        {/* Main Map Panel */}
         <div className="lg:col-span-3">
           <MapView
             location={selectedLocation}
@@ -42,15 +43,15 @@ export default function MapPage() {
           />
         </div>
 
-        {/* Monitored Ground Stations List */}
+        {/* Location List Panel */}
         <div className="glass-panel rounded-2xl p-4 sm:p-5 border border-white/[0.07] flex flex-col">
           <div className="flex items-center gap-2.5 pb-3 border-b border-white/[0.07] mb-3">
             <div className="w-8 h-8 rounded-xl bg-white/[0.04] text-sky-400 border border-white/[0.08] flex items-center justify-center">
               <Radio size={16} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">Telemetry Stations</h3>
-              <p className="text-[11px] text-slate-400">Active Doppler grid</p>
+              <h3 className="text-sm font-bold text-white">Locations</h3>
+              <p className="text-[11px] text-slate-400">Select to navigate map</p>
             </div>
           </div>
 
@@ -94,7 +95,7 @@ export default function MapPage() {
 
           <div className="pt-3 border-t border-white/[0.07] mt-3 text-[11px] text-slate-400 flex items-center gap-1.5">
             <Shield size={13} className="text-emerald-400" />
-            <span className="text-emerald-400 font-medium">All telemetry stations active</span>
+            <span className="text-emerald-400 font-medium">Mappls map active</span>
           </div>
         </div>
       </div>
