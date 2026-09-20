@@ -48,8 +48,8 @@ function buildPopupHtml(location: LocationData, weather?: CurrentWeather | null)
       </table>`
     : '<p style="color:#9ca3af;font-size:12px">Weather data loading…</p>';
 
-  return `<div style="font-size:13px;line-height:1.5;min-width:200px;max-width:240px">
-    <p style="font-weight:700;font-size:14px;margin:0 0 4px">${city}</p>
+  return `<div style="font-size:13px;line-height:1.5;min-width:200px;max-width:240px;color:#111827">
+    <p style="font-weight:700;font-size:14px;margin:0 0 4px;color:#111827">${city}</p>
     ${country}
     ${weatherRows}
   </div>`;
@@ -107,7 +107,7 @@ export default function MapView({ location, weather, className = '' }: MapViewPr
       const mapInstance = mapplsClassObject.Map({
         id: mapContainerRef.current.id,
         properties: {
-          center: [location.lat, location.lon],
+          center: [location.lon, location.lat],
           zoom: 10,
           zoomControl: true,
         },
@@ -148,9 +148,9 @@ export default function MapView({ location, weather, className = '' }: MapViewPr
     if (sdkState !== 'ready') return;
     if (!mapRef.current || !hasCoords) return;
 
-    // Fly to new centre
+    // Fly to new centre ([longitude, latitude] in MapLibre / Mappls)
     try {
-      mapRef.current.flyTo({ center: [location.lat, location.lon], zoom: 10, speed: 1.5 });
+      mapRef.current.flyTo({ center: [location.lon, location.lat], zoom: 10, speed: 1.5 });
     } catch {
       try { mapRef.current.setCenter({ lat: location.lat, lng: location.lon }); } catch { /* ignore */ }
     }
