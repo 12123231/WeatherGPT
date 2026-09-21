@@ -1,5 +1,5 @@
-import type { ChatMessage, ForecastDay, CurrentWeather, WeatherRisk } from '../types/index.js';
-import { getCurrentWeather, getForecast, getWeatherRisks, searchLocations } from './weatherService.js';
+import type { ChatMessage, ForecastDay, HourlyForecast, CurrentWeather, WeatherRisk } from '../types/index.js';
+import { getCurrentWeather, getForecast, getWeatherRisks, getHourlyForecast, searchLocations } from './weatherService.js';
 
 export type DetectedLanguage = 'hindi' | 'hinglish' | 'english';
 
@@ -13,6 +13,10 @@ export type WeatherIntent =
   | 'tomorrow'
   | 'rain_today'
   | 'temp_today'
+  | 'weekend'
+  | 'evening'
+  | 'tonight'
+  | 'travel'
   | 'current';
 
 export interface ConversationContext {
@@ -328,6 +332,66 @@ export function detectWeatherIntent(message: string): WeatherIntent | null {
 
   if (hasRainWord && hasMultiDayWord) {
     return 'rain_3day';
+  }
+
+  // 5a. Weekend — must be before forecast_3day because "forecast for this weekend" contains "forecast"
+  const isWeekend =
+    text.includes('this weekend') ||
+    text.includes('the weekend') ||
+    text.includes('weekend forecast') ||
+    text.includes('weekend weather') ||
+    text.includes('on the weekend') ||
+    text.includes('for the weekend') ||
+    text.includes('इस सप्ताहांत') ||
+    text.includes('weekend mein') ||
+    text.includes('shaniwar') ||
+    text.includes('raviwar') ||
+    (text.includes('weekend') && (text.includes('will') || text.includes('forecast') || text.includes('rain') || text.includes('hot') || text.includes('weather')));
+
+  if (isWeekend) {
+    return 'weekend';
+  }
+
+  // 5b. Evening — this evening / tonight
+  const isEvening =
+    text.includes('this evening') ||
+    text.includes('this afternoon') ||
+    text.includes('shaam') ||
+    text.includes('शाम') ||
+    text.includes('शाम को') ||
+    (text.includes('evening') && (text.includes('weather') || text.includes('forecast') || text.includes('rain') || text.includes('travel') || text.includes('safe') || text.includes('it be') || text.includes('will')));
+
+  if (isEvening) {
+    return 'evening';
+  }
+
+  const isTonight =
+    text.includes('tonight') ||
+    text.includes('aaj raat') ||
+    text.includes('आज रात') ||
+    (text.includes('night') && (text.includes('weather') || text.includes('forecast') || text.includes('rain') || text.includes('travel') || text.includes('safe') || text.includes('will')));
+
+  if (isTonight) {
+    return 'tonight';
+  }
+
+  // 5c. Travel safety — "is it safe to travel", "safe to go out", etc.
+  const isTravel =
+    text.includes('safe to travel') ||
+    text.includes('travel safe') ||
+    text.includes('safe to drive') ||
+    text.includes('safe to go') ||
+    text.includes('safe to fly') ||
+    text.includes('should i travel') ||
+    text.includes('can i travel') ||
+    text.includes('go outside') ||
+    text.includes('go out') ||
+    text.includes('safar karna') ||
+    text.includes('safar safe') ||
+    (text.includes('travel') && (text.includes('safe') || text.includes('conditions') || text.includes('weather')));
+
+  if (isTravel) {
+    return 'travel';
   }
 
   // 5. 3-Day / Multi-Day General Forecast
@@ -754,6 +818,183 @@ function generateTomorrowResponse(
     return `Kal ${location} mein high temperature ${tomorrow.high}°C aur low ${tomorrow.low}°C rahega, with ${tomorrow.condition.main} conditions aur ${tomorrow.rainProbability}% rain chance.`;
   }
   return `Tomorrow's forecast for ${location} predicts ${tomorrow.condition.main} conditions with a high of ${tomorrow.high}°C and a low of ${tomorrow.low}°C. Precipitation chance is ${tomorrow.rainProbability}%.`;
+}
+
+/**
+ * Generates a weekend forecast response. Checks available forecast data for upcoming
+ * Saturday/Sunday dates. If the weekend is outside the 3-day window, informs the user.
+ */
+function generateWeekendResponse(
+  location: string,
+  forecast: ForecastDay[],
+  language: DetectedLanguage
+): string {
+  // Identify upcoming Sat (6) and Sun (0) from the forecast dates
+  const weekendDays = forecast.filter((f) => {
+    const d = new Date(f.date + 'T00:00:00');
+    const dow = d.getDay(); // 0 = Sunday, 6 = Saturday
+    return dow === 0 || dow === 6;
+  });
+
+  if (weekendDays.length === 0) {
+    // Determine actual upcoming weekend dates to tell the user
+    const today = new Date();
+    const todayDow = today.getDay();
+    const daysUntilSat = todayDow === 6 ? 7 : (6 - todayDow + 7) % 7 || 7;
+    const nextSat = new Date(today);
+    nextSat.setDate(today.getDate() + daysUntilSat);
+    const nextSun = new Date(nextSat);
+    nextSun.setDate(nextSat.getDate() + 1);
+    const satStr = nextSat.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    const sunStr = nextSun.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+
+    // Show what we do have
+    const available = forecast.map((f, idx) => {
+      const label = idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : f.day;
+      return `• ${label} (${f.date}): High ${f.high}°C, Low ${f.low}°C, ${f.condition.main}, ${f.rainProbability}% rain chance`;
+    });
+
+    if (language === 'hindi') {
+      return `${location} के लिए इस सप्ताहांत (${satStr}–${sunStr}) का पूर्वानुमान वर्तमान 3-दिन की फोरकास्ट विंडो में उपलब्ध नहीं है।\n\nउपलब्ध पूर्वानुमान:\n${available.join('\n')}`;
+    }
+    if (language === 'hinglish') {
+      return `${location} ke liye is weekend (${satStr}–${sunStr}) ka forecast abhi available nahi hai — yeh 3-day forecast window se bahar hai.\n\nAvailable forecast:\n${available.join('\n')}`;
+    }
+    return `The weekend forecast for ${location} (${satStr}–${sunStr}) is not currently available — it falls outside the 3-day forecast window.\n\nHere is the available forecast:\n${available.join('\n')}`;
+  }
+
+  const lines = weekendDays.map((f) => {
+    const d = new Date(f.date + 'T00:00:00');
+    const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+    const hindiName = dayName === 'Saturday' ? 'शनिवार' : 'रविवार';
+    if (language === 'hindi') {
+      return `• ${hindiName} (${f.date}): अधिकतम ${f.high}°C / न्यूनतम ${f.low}°C, ${f.condition.main}, बारिश: ${f.rainProbability}%`;
+    }
+    return `• ${dayName} (${f.date}): High ${f.high}°C, Low ${f.low}°C, ${f.condition.main}, ${f.rainProbability}% rain chance`;
+  });
+
+  if (language === 'hindi') {
+    return `${location} के लिए इस सप्ताहांत का पूर्वानुमान:\n\n${lines.join('\n')}`;
+  }
+  if (language === 'hinglish') {
+    const hinglishLines = weekendDays.map((f) => {
+      const d = new Date(f.date + 'T00:00:00');
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+      return `• ${dayName} (${f.date}): High ${f.high}°C, Low ${f.low}°C, ${f.condition.main}, ${f.rainProbability}% rain chance`;
+    });
+    return `${location} ke liye is weekend ka forecast:\n\n${hinglishLines.join('\n')}`;
+  }
+  return `Weekend forecast for ${location}:\n\n${lines.join('\n')}`;
+}
+
+/**
+ * Generates an evening weather advisory using today's hourly forecast for the 17:00–21:00 window.
+ * Falls back to a note if hourly data is unavailable.
+ */
+function generateEveningResponse(
+  location: string,
+  hourly: HourlyForecast[],
+  language: DetectedLanguage,
+  isTravel: boolean
+): string {
+  // Filter to evening hours: 17 (5 PM) through 21 (9 PM)
+  const eveningHours = hourly.filter(
+    (h) => typeof h.hour === 'number' && h.hour >= 17 && h.hour <= 21
+  );
+
+  if (eveningHours.length === 0) {
+    // No hourly evening data — give a transparent message
+    if (language === 'hindi') {
+      return `${location} के लिए शाम के घंटों का विस्तृत पूर्वानुमान अभी उपलब्ध नहीं है।`;
+    }
+    if (language === 'hinglish') {
+      return `${location} ke liye aaj shaam ke hourly forecast data abhi available nahi hai.`;
+    }
+    return `Detailed evening hourly forecast for ${location} is not currently available.`;
+  }
+
+  const maxRain = Math.max(...eveningHours.map((h) => h.rainProbability));
+  const maxPrecip = Math.max(...eveningHours.map((h) => h.precipitation ?? 0));
+  const maxWind = 0; // HourlyForecast doesn't carry windSpeed — rely on conditions
+  const temps = eveningHours.map((h) => h.temperature);
+  const minTemp = Math.min(...temps);
+  const maxTemp = Math.max(...temps);
+  const condition = eveningHours[0].condition.main;
+
+  const hourLines = eveningHours.map((h) => {
+    const precLine = (h.precipitation ?? 0) > 0 ? `, ${h.precipitation?.toFixed(1)}mm` : '';
+    return `• ${h.time}: ${h.temperature}°C, ${h.condition.main}, ${h.rainProbability}% rain${precLine}`;
+  });
+
+  const isSafe = maxRain < 40 && maxPrecip < 2;
+  const safetyNote = isTravel
+    ? isSafe
+      ? `Conditions look generally favourable for travel this evening.`
+      : `Exercise caution — elevated rain probability (${maxRain}%) this evening may affect road visibility and conditions.`
+    : '';
+
+  if (language === 'hindi') {
+    const safetyHindi = isTravel
+      ? isSafe
+        ? `शाम के सफर के लिए मौसम आमतौर पर ठीक रहेगा।`
+        : `सावधानी बरतें — इस शाम बारिश की ${maxRain}% संभावना है।`
+      : '';
+    return `${location} में आज शाम का मौसम (5 PM – 9 PM):\n\n${hourLines.join('\n')}\n\n${safetyHindi}`.trim();
+  }
+  if (language === 'hinglish') {
+    const safetyHinglish = isTravel
+      ? isSafe
+        ? `Shaam ko travel ke liye conditions theek lagti hain.`
+        : `Savdhani rakhein — aaj shaam ${maxRain}% rain chance hai.`
+      : '';
+    return `${location} mein aaj shaam ka mausam (5 PM – 9 PM):\n\n${hourLines.join('\n')}\n\n${safetyHinglish}`.trim();
+  }
+
+  return `Evening weather for ${location} (5 PM – 9 PM):\n\n${hourLines.join('\n')}\n\n${safetyNote}`.trim();
+}
+
+/**
+ * Generates a tonight weather advisory using today's hourly forecast for the 21:00–23:59 window.
+ */
+function generateTonightResponse(
+  location: string,
+  hourly: HourlyForecast[],
+  language: DetectedLanguage
+): string {
+  const tonightHours = hourly.filter(
+    (h) => typeof h.hour === 'number' && h.hour >= 21
+  );
+
+  if (tonightHours.length === 0) {
+    if (language === 'hindi') {
+      return `${location} के लिए आज रात के घंटों का विस्तृत पूर्वानुमान अभी उपलब्ध नहीं है।`;
+    }
+    if (language === 'hinglish') {
+      return `${location} ke liye aaj raat ke hourly forecast data available nahi hai.`;
+    }
+    return `Detailed tonight hourly forecast for ${location} is not currently available.`;
+  }
+
+  const maxRain = Math.max(...tonightHours.map((h) => h.rainProbability));
+  const maxPrecip = Math.max(...tonightHours.map((h) => h.precipitation ?? 0));
+  const hourLines = tonightHours.map((h) => {
+    const precLine = (h.precipitation ?? 0) > 0 ? `, ${h.precipitation?.toFixed(1)}mm` : '';
+    return `• ${h.time}: ${h.temperature}°C, ${h.condition.main}, ${h.rainProbability}% rain${precLine}`;
+  });
+
+  if (language === 'hindi') {
+    const rainNote = maxRain >= 50 ? `आज रात ${location} में बारिश की संभावना अधिक (${maxRain}%) है।` : `आज रात ${location} में बारिश की संभावना कम (${maxRain}%) है।`;
+    return `${location} में आज रात का मौसम:\n\n${hourLines.join('\n')}\n\n${rainNote}`;
+  }
+  if (language === 'hinglish') {
+    const rainNote = maxRain >= 50 ? `Aaj raat ${location} mein baarish ki zyada sambhavna (${maxRain}%) hai.` : `Aaj raat ${location} mein baarish ki kam sambhavna (${maxRain}%) hai.`;
+    return `${location} mein aaj raat ka mausam:\n\n${hourLines.join('\n')}\n\n${rainNote}`;
+  }
+
+  const rainNote = maxRain >= 50
+    ? `Rain is likely tonight in ${location} (${maxRain}% chance). Consider carrying an umbrella.`
+    : `Rain is unlikely tonight in ${location} (${maxRain}% chance).`;
+  return `Tonight's weather for ${location}:\n\n${hourLines.join('\n')}\n\n${rainNote}`;
 }
 
 function generateContextualWeatherResponse(
