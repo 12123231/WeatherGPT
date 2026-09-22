@@ -1,4 +1,4 @@
-﻿import type { ChatMessage } from '../../types/chat';
+import type { ChatMessage } from '../../types/chat';
 import { formatTime } from '../../utils/formatters';
 import { Bot, User } from 'lucide-react';
 
@@ -49,7 +49,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
               : 'bg-sky-600 text-white'
           }`}
         >
-          {message.content}
+          {message.content ? message.content.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*\*/g, '') : ''}
         </div>
       </div>
     </div>
