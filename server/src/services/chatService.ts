@@ -837,12 +837,12 @@ function generateWeekendResponse(
   });
 
   if (weekendDays.length === 0) {
-    // Determine actual upcoming weekend dates to tell the user
-    const today = new Date();
-    const todayDow = today.getDay();
+    // Determine actual upcoming weekend dates to tell the user using location local date
+    const baseDate = forecast[0]?.date ? new Date(forecast[0].date + 'T00:00:00') : new Date();
+    const todayDow = baseDate.getDay();
     const daysUntilSat = todayDow === 6 ? 7 : (6 - todayDow + 7) % 7 || 7;
-    const nextSat = new Date(today);
-    nextSat.setDate(today.getDate() + daysUntilSat);
+    const nextSat = new Date(baseDate);
+    nextSat.setDate(baseDate.getDate() + daysUntilSat);
     const nextSun = new Date(nextSat);
     nextSun.setDate(nextSat.getDate() + 1);
     const satStr = nextSat.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
@@ -895,62 +895,63 @@ function generateEveningResponse(
   location: string,
   hourly: HourlyForecast[],
   language: DetectedLanguage,
-  isTravel: boolean
+  isTravel: boolean,
+  localTodayDate?: string
 ): string {
-  // Filter to evening hours: 17 (5 PM) through 21 (9 PM)
-  const eveningHours = hourly.filter(
-    (h) => typeof h.hour === 'number' && h.hour >= 17 && h.hour <= 21
-  );
+  // Filter to evening hours: 17 (5 PM) through 21 (9 PM) for today
+  const eveningHours = hourly.filter((h) => {
+    if (typeof h.hour !== 'number' || h.hour < 17 || h.hour > 21) return false;
+    if (localTodayDate && h.date) {
+      return h.date === localTodayDate;
+    }
+    return true;
+  });
 
   if (eveningHours.length === 0) {
-    // No hourly evening data — give a transparent message
     if (language === 'hindi') {
-      return `${location} के लिए शाम के घंटों का विस्तृत पूर्वानुमान अभी उपलब्ध नहीं है।`;
+      return `${location} के लिए आज शाम (5 PM – 9 PM) के विस्तृत घंटों का पूर्वानुमान उपलब्ध नहीं है।`;
     }
     if (language === 'hinglish') {
-      return `${location} ke liye aaj shaam ke hourly forecast data abhi available nahi hai.`;
+      return `${location} ke liye aaj shaam (5 PM – 9 PM) ka hourly forecast data abhi available nahi hai.`;
     }
-    return `Detailed evening hourly forecast for ${location} is not currently available.`;
+    return `Detailed evening hourly forecast (5 PM – 9 PM) for ${location} is not currently available.`;
   }
 
   const maxRain = Math.max(...eveningHours.map((h) => h.rainProbability));
   const maxPrecip = Math.max(...eveningHours.map((h) => h.precipitation ?? 0));
-  const maxWind = 0; // HourlyForecast doesn't carry windSpeed — rely on conditions
-  const temps = eveningHours.map((h) => h.temperature);
-  const minTemp = Math.min(...temps);
-  const maxTemp = Math.max(...temps);
-  const condition = eveningHours[0].condition.main;
-
   const hourLines = eveningHours.map((h) => {
     const precLine = (h.precipitation ?? 0) > 0 ? `, ${h.precipitation?.toFixed(1)}mm` : '';
-    return `• ${h.time}: ${h.temperature}°C, ${h.condition.main}, ${h.rainProbability}% rain${precLine}`;
+    const timeLabel = typeof h.hour === 'number'
+      ? (h.hour === 12 ? '12 PM' : h.hour > 12 ? `${h.hour - 12} PM` : h.hour === 0 ? '12 AM' : `${h.hour} AM`)
+      : h.time;
+    return `• ${timeLabel}: ${h.temperature}°C, ${h.condition.main}, ${h.rainProbability}% rain${precLine}`;
   });
 
   const isSafe = maxRain < 40 && maxPrecip < 2;
   const safetyNote = isTravel
     ? isSafe
-      ? `Conditions look generally favourable for travel this evening.`
-      : `Exercise caution — elevated rain probability (${maxRain}%) this evening may affect road visibility and conditions.`
+      ? `Travel Advisory: Conditions look generally favourable for travel this evening.`
+      : `Travel Advisory: Exercise caution — elevated rain probability (${maxRain}%) this evening may affect road visibility and conditions.`
     : '';
 
   if (language === 'hindi') {
     const safetyHindi = isTravel
       ? isSafe
-        ? `शाम के सफर के लिए मौसम आमतौर पर ठीक रहेगा।`
-        : `सावधानी बरतें — इस शाम बारिश की ${maxRain}% संभावना है।`
+        ? `यात्रा सलाह: शाम के सफर के लिए मौसम आमतौर पर अनुकूल रहेगा।`
+        : `यात्रा सलाह: सावधानी बरतें — इस शाम बारिश की ${maxRain}% संभावना है जिससे यात्रा प्रभावित हो सकती है।`
       : '';
-    return `${location} में आज शाम का मौसम (5 PM – 9 PM):\n\n${hourLines.join('\n')}\n\n${safetyHindi}`.trim();
+    return `${location} में आज शाम का मौसम (5 PM – 9 PM):\n\n${hourLines.join('\n')}${safetyHindi ? `\n\n${safetyHindi}` : ''}`.trim();
   }
   if (language === 'hinglish') {
     const safetyHinglish = isTravel
       ? isSafe
-        ? `Shaam ko travel ke liye conditions theek lagti hain.`
-        : `Savdhani rakhein — aaj shaam ${maxRain}% rain chance hai.`
+        ? `Travel Advisory: Shaam ko travel ke liye conditions theek lagti hain.`
+        : `Travel Advisory: Savdhani rakhein — aaj shaam ${maxRain}% rain chance hai.`
       : '';
-    return `${location} mein aaj shaam ka mausam (5 PM – 9 PM):\n\n${hourLines.join('\n')}\n\n${safetyHinglish}`.trim();
+    return `${location} mein aaj shaam ka mausam (5 PM – 9 PM):\n\n${hourLines.join('\n')}${safetyHinglish ? `\n\n${safetyHinglish}` : ''}`.trim();
   }
 
-  return `Evening weather for ${location} (5 PM – 9 PM):\n\n${hourLines.join('\n')}\n\n${safetyNote}`.trim();
+  return `Evening weather for ${location} (5 PM – 9 PM):\n\n${hourLines.join('\n')}${safetyNote ? `\n\n${safetyNote}` : ''}`.trim();
 }
 
 /**
@@ -959,11 +960,16 @@ function generateEveningResponse(
 function generateTonightResponse(
   location: string,
   hourly: HourlyForecast[],
-  language: DetectedLanguage
+  language: DetectedLanguage,
+  localTodayDate?: string
 ): string {
-  const tonightHours = hourly.filter(
-    (h) => typeof h.hour === 'number' && h.hour >= 21
-  );
+  const tonightHours = hourly.filter((h) => {
+    if (typeof h.hour !== 'number' || h.hour < 21) return false;
+    if (localTodayDate && h.date) {
+      return h.date === localTodayDate;
+    }
+    return true;
+  });
 
   if (tonightHours.length === 0) {
     if (language === 'hindi') {
@@ -976,10 +982,12 @@ function generateTonightResponse(
   }
 
   const maxRain = Math.max(...tonightHours.map((h) => h.rainProbability));
-  const maxPrecip = Math.max(...tonightHours.map((h) => h.precipitation ?? 0));
   const hourLines = tonightHours.map((h) => {
     const precLine = (h.precipitation ?? 0) > 0 ? `, ${h.precipitation?.toFixed(1)}mm` : '';
-    return `• ${h.time}: ${h.temperature}°C, ${h.condition.main}, ${h.rainProbability}% rain${precLine}`;
+    const timeLabel = typeof h.hour === 'number'
+      ? (h.hour === 12 ? '12 PM' : h.hour > 12 ? `${h.hour - 12} PM` : h.hour === 0 ? '12 AM' : `${h.hour} AM`)
+      : h.time;
+    return `• ${timeLabel}: ${h.temperature}°C, ${h.condition.main}, ${h.rainProbability}% rain${precLine}`;
   });
 
   if (language === 'hindi') {
@@ -1003,7 +1011,8 @@ function generateContextualWeatherResponse(
   intent: WeatherIntent,
   weather: CurrentWeather,
   forecast: ForecastDay[],
-  risks: WeatherRisk[]
+  risks: WeatherRisk[],
+  hourly: HourlyForecast[] = []
 ): string {
   const q = query.toLowerCase();
   const todayForecast = forecast[0];
@@ -1056,6 +1065,22 @@ function generateContextualWeatherResponse(
   // 5. Tomorrow
   if (intent === 'tomorrow') {
     return generateTomorrowResponse(weather.location, forecast, language);
+  }
+
+  // 6. Weekend
+  if (intent === 'weekend') {
+    return generateWeekendResponse(weather.location, forecast, language);
+  }
+
+  // 7. Evening / Travel
+  if (intent === 'evening' || intent === 'travel') {
+    const isTravelQuery = intent === 'travel' || q.includes('travel') || q.includes('safe') || q.includes('drive') || q.includes('trip') || q.includes('safar');
+    return generateEveningResponse(weather.location, hourly, language, isTravelQuery, todayForecast?.date);
+  }
+
+  // 8. Tonight
+  if (intent === 'tonight') {
+    return generateTonightResponse(weather.location, hourly, language, todayForecast?.date);
   }
 
   // 6. Language-specific Fallbacks for Today / Current
@@ -1163,6 +1188,23 @@ async function callGeminiApi(
   } else if (intent === 'tomorrow') {
     intentDirective = `CRITICAL MANDATORY TOMORROW REQUIREMENT:
 - The user is asking about tomorrow (${forecast[1]?.day || 'Tomorrow'}). Answer specifically for tomorrow's forecast.`;
+  } else if (intent === 'weekend') {
+    intentDirective = `CRITICAL MANDATORY WEEKEND FORECAST REQUIREMENT:
+- The user is asking for the upcoming weekend forecast for ${weather.location}.
+- The available forecast window is strictly 3 days: ${forecast.map(f => `${f.day} (${f.date})`).join(', ')}.
+- If the upcoming weekend dates are outside this 3-day window, state clearly that the weekend falls outside the available 3-day forecast window and provide the available forecast days. Do NOT fabricate or estimate weather for unavailable dates.`;
+  } else if (intent === 'evening') {
+    intentDirective = `CRITICAL MANDATORY EVENING WEATHER REQUIREMENT:
+- The user is asking about weather for this evening in ${weather.location}.
+- Provide a weather advisory specifically for this evening (5 PM - 9 PM) using the relevant hourly telemetry. Do NOT cite official government alerts unless severe.`;
+  } else if (intent === 'travel') {
+    intentDirective = `CRITICAL MANDATORY TRAVEL ADVISORY REQUIREMENT:
+- The user is asking whether it is safe to travel in/from ${weather.location}.
+- Provide a practical, weather-based travel advisory based on precipitation, wind, visibility, and conditions.`;
+  } else if (intent === 'tonight') {
+    intentDirective = `CRITICAL MANDATORY TONIGHT FORECAST REQUIREMENT:
+- The user is asking about tonight's weather in ${weather.location}.
+- Answer specifically for tonight (9 PM onward) using available telemetry.`;
   }
 
   const systemPrompt = `You are WeatherGPT, an AI-powered conversational weather intelligence platform for the Smart India Hackathon (SIH 2026).
@@ -1287,15 +1329,17 @@ export async function processChatQuery(
   session.lastUpdated = Date.now();
 
   // 5. Retrieve live weather telemetry for the target location
-  const [currentResult, forecastResult, risksResult] = await Promise.all([
+  const [currentResult, forecastResult, risksResult, hourlyResult] = await Promise.all([
     getCurrentWeather(targetLocation),
     getForecast(targetLocation),
     getWeatherRisks(targetLocation),
+    getHourlyForecast(targetLocation),
   ]);
 
   const weather = currentResult.data;
   const forecast = forecastResult.data;
   const risks = risksResult.data;
+  const hourly = hourlyResult.data;
 
   // 6. Attempt Gemini generation if available
   if (apiKey) {
@@ -1315,7 +1359,7 @@ export async function processChatQuery(
   }
 
   // 7. Deterministic meteorological reasoning engine
-  const responseText = generateContextualWeatherResponse(message, language, activeIntent, weather, forecast, risks);
+  const responseText = generateContextualWeatherResponse(message, language, activeIntent, weather, forecast, risks, hourly);
 
   return {
     id: `msg-${Date.now()}`,
