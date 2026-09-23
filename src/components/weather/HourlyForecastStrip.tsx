@@ -1,7 +1,14 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import type { CurrentWeather, HourlyForecast } from '../../types/weather';
 import { Cloud, CloudRain, Moon, CloudSun, Sun, CloudLightning, CloudSnow } from 'lucide-react';
-import { getLocalTimeInfo, formatHourDisplay, resolveLocationTimezone } from '../../utils/timezone';
+import {
+  resolveLocationTimezone,
+  getBaseEpochForLocalHour,
+  formatEpochToLocalHour,
+  getMsUntilNextHour,
+  getLocalTimeInfo,
+  formatHourDisplay,
+} from '../../utils/timezone';
 import { generateMockHourlyForecast } from '../../data/mockForecast';
 import { useWeatherContext } from '../../context/useWeatherContext';
 
@@ -31,15 +38,10 @@ export default function HourlyForecastStrip({
   const selectedLocation = context?.selectedLocation;
 
   const [selectedSlotIndex, setSelectedSlotIndex] = useState(0);
-  const [currentLocalHour, setCurrentLocalHour] = useState<number>(() => {
-    const tz = resolveLocationTimezone(
-      weather?.location || selectedLocation?.name || selectedLocation?.id,
-      weather?.timezone || selectedLocation?.timezone
-    );
-    return getLocalTimeInfo(tz).hour;
-  });
+  const [clockTick, setClockTick] = useState<number>(() => Date.now());
+  const isRefreshingRef = useRef(false);
 
-  // Resolve target location's timezone
+  // Resolve target location's IANA timezone
   const targetTimezone = useMemo(() => {
     return resolveLocationTimezone(
       weather?.location || selectedLocation?.name || selectedLocation?.id,
@@ -47,32 +49,36 @@ export default function HourlyForecastStrip({
     );
   }, [weather?.location, weather?.timezone, selectedLocation?.name, selectedLocation?.id, selectedLocation?.timezone]);
 
-  // Real-time clock tick: check target location's local time every 15 seconds to roll hours forward
+  // Schedule auto-advancement at exact local-hour boundary in target timezone
   useEffect(() => {
-    const checkLocalTime = () => {
-      if (weather?.localtime) {
-        const parts = weather.localtime.split(' ');
-        if (parts[1]) {
-          const parsed = parseInt(parts[1].split(':')[0], 10);
-          if (!isNaN(parsed)) {
-            setCurrentLocalHour((prev) => (prev !== parsed ? parsed : prev));
-            return;
-          }
-        }
-      }
-      const { hour } = getLocalTimeInfo(targetTimezone);
-      setCurrentLocalHour((prev) => (prev !== hour ? hour : prev));
+    let timerId: ReturnType<typeof setTimeout>;
+
+    const scheduleNextHour = () => {
+      const msUntilNext = getMsUntilNextHour(targetTimezone);
+      timerId = setTimeout(() => {
+        setClockTick(Date.now());
+        scheduleNextHour();
+      }, msUntilNext);
     };
 
-    checkLocalTime();
-    const interval = setInterval(checkLocalTime, 15000);
-    return () => clearInterval(interval);
-  }, [targetTimezone, weather?.localtime]);
+    scheduleNextHour();
 
-  // Generate or slice 8 dynamic consecutive hourly slots starting with "Now"
+    // Heartbeat every 30s to catch sleep / wake-up or tab backgrounding without API calls
+    const heartbeat = setInterval(() => {
+      const ms = getMsUntilNextHour(targetTimezone);
+      if (ms > 3590000 || ms < 1000) {
+        setClockTick(Date.now());
+      }
+    }, 30000);
+
+    return () => {
+      clearTimeout(timerId);
+      clearInterval(heartbeat);
+    };
+  }, [targetTimezone]);
+
+  // Generate or slice exactly 8 dynamic consecutive hourly slots starting with "Now"
   const hourlySlots = useMemo<HourlySlot[]>(() => {
-    const baseTemp = weather ? Math.round(weather.temperature) : 18;
-
     // Helper to map icon identifier to supported icon types
     const resolveIconType = (iconStr: string, isDay: boolean): HourlySlot['iconType'] => {
       const lower = (iconStr || '').toLowerCase();
@@ -86,74 +92,131 @@ export default function HourlyForecastStrip({
       return 'cloud';
     };
 
-    // If we have an hourly forecast list from backend / context
+    const currentEpoch = Math.floor(clockTick / 1000);
+    const currentHourBaseEpoch = getBaseEpochForLocalHour(targetTimezone, new Date(clockTick));
+
+    let validConsecutiveList: HourlyForecast[] | null = null;
+
     if (rawHourlyForecast && rawHourlyForecast.length > 0) {
-      // Find starting index matching current local hour in target timezone
+      // Find starting index matching current local forecast hour using time_epoch or local hour
       let startIndex = rawHourlyForecast.findIndex((h) => {
-        if (typeof h.hour === 'number') {
-          return h.hour === currentLocalHour;
+        if (typeof h.time_epoch === 'number') {
+          return (
+            h.time_epoch === currentHourBaseEpoch ||
+            (h.time_epoch <= currentEpoch && currentEpoch < h.time_epoch + 3600)
+          );
         }
-        if (h.time === 'Now') return true;
-        return false;
+        if (typeof h.hour === 'number') {
+          const { hour: curHour } = getLocalTimeInfo(targetTimezone);
+          return h.hour === curHour;
+        }
+        return h.time === 'Now';
       });
 
-      if (startIndex === -1) {
-        startIndex = 0;
+      if (startIndex === -1 && rawHourlyForecast.length >= 8) {
+        // If current hour is just ahead of the first entry (within 1 hour)
+        const firstEpoch = rawHourlyForecast[0].time_epoch;
+        if (typeof firstEpoch === 'number' && Math.abs(firstEpoch - currentHourBaseEpoch) <= 3600) {
+          startIndex = 0;
+        }
       }
 
-      // Extract 8 consecutive hours from startIndex
-      const candidateHours = rawHourlyForecast.slice(startIndex, startIndex + 8);
+      // Check if we have 8 consecutive hours starting from startIndex
+      if (startIndex >= 0 && startIndex + 8 <= rawHourlyForecast.length) {
+        const candidate = rawHourlyForecast.slice(startIndex, startIndex + 8);
+        let isContinuous = true;
 
-      // If fewer than 8 hours available at the end of the array, fill remaining from fallback generator
-      const fallbackList = generateMockHourlyForecast(
+        for (let i = 0; i < 7; i++) {
+          const cur = candidate[i];
+          const nxt = candidate[i + 1];
+
+          if (typeof cur.time_epoch === 'number' && typeof nxt.time_epoch === 'number') {
+            if (nxt.time_epoch - cur.time_epoch !== 3600) {
+              isContinuous = false;
+              break;
+            }
+          } else if (typeof cur.hour === 'number' && typeof nxt.hour === 'number') {
+            if ((nxt.hour - cur.hour + 24) % 24 !== 1) {
+              isContinuous = false;
+              break;
+            }
+          }
+        }
+
+        if (isContinuous) {
+          validConsecutiveList = candidate;
+        }
+      }
+    }
+
+    // Source of the 8 items: genuine consecutive slice from cache, or fallback generator
+    const sourceList =
+      validConsecutiveList ||
+      generateMockHourlyForecast(
         selectedLocation?.id || weather?.location || 'new-delhi',
         targetTimezone,
         weather
-      );
+      ).slice(0, 8);
 
-      const slots: HourlySlot[] = [];
-      for (let i = 0; i < 8; i++) {
-        const h = candidateHours[i] || fallbackList[i];
-        if (h) {
-          const hourNum = typeof h.hour === 'number' ? h.hour : (currentLocalHour + i) % 24;
-          const isDay = typeof h.isDay === 'boolean' ? h.isDay : (hourNum >= 6 && hourNum < 19);
-          const iconType = resolveIconType(h.condition?.icon || '', isDay);
-          const timeLabel = i === 0 ? 'Now' : (h.time === 'Now' ? formatHourDisplay(hourNum, false) : h.time);
+    const slots: HourlySlot[] = [];
 
-          slots.push({
-            time: timeLabel,
-            temp: i === 0 && weather ? Math.round(weather.temperature) : Math.round(h.temperature),
-            iconType: i === 0 && weather ? resolveIconType(weather.condition?.icon || '', isDay) : iconType,
-            rainChance: typeof h.rainProbability === 'number' && h.rainProbability > 0 ? h.rainProbability : undefined,
-            hour: hourNum,
-          });
-        }
+    for (let i = 0; i < 8; i++) {
+      const item = sourceList[i];
+      let timeLabel: string;
+      let hourNum: number;
+      let isDay: boolean;
+
+      if (typeof item.time_epoch === 'number') {
+        const info = formatEpochToLocalHour(item.time_epoch, targetTimezone);
+        timeLabel = i === 0 ? 'Now' : info.displayTime;
+        hourNum = info.hour;
+        isDay = typeof item.isDay === 'boolean' ? item.isDay : info.isDaytime;
+      } else {
+        hourNum = typeof item.hour === 'number' ? item.hour : (getLocalTimeInfo(targetTimezone).hour + i) % 24;
+        timeLabel = i === 0 ? 'Now' : formatHourDisplay(hourNum, false);
+        isDay = typeof item.isDay === 'boolean' ? item.isDay : (hourNum >= 6 && hourNum < 19);
       }
 
-      return slots;
+      const isFirst = i === 0;
+      const temp = isFirst && weather ? Math.round(weather.temperature) : Math.round(item.temperature);
+      const iconType = isFirst && weather
+        ? resolveIconType(weather.condition?.icon || '', isDay)
+        : resolveIconType(item.condition?.icon || '', isDay);
+      const rainChance =
+        typeof item.rainProbability === 'number' && item.rainProbability > 0 ? item.rainProbability : undefined;
+
+      slots.push({
+        time: timeLabel,
+        temp,
+        iconType,
+        rainChance,
+        hour: hourNum,
+      });
     }
 
-    // Fallback: generate 8 dynamic consecutive hours starting with "Now" using location telemetry
-    const dynamicFallback = generateMockHourlyForecast(
-      selectedLocation?.id || weather?.location || 'new-delhi',
-      targetTimezone,
-      weather
-    );
+    return slots;
+  }, [weather, rawHourlyForecast, clockTick, targetTimezone, selectedLocation?.id]);
 
-    return dynamicFallback.slice(0, 8).map((h, i) => {
-      const hourNum = typeof h.hour === 'number' ? h.hour : (currentLocalHour + i) % 24;
-      const isDay = typeof h.isDay === 'boolean' ? h.isDay : (hourNum >= 6 && hourNum < 19);
-      const iconType = resolveIconType(h.condition?.icon || '', isDay);
-
-      return {
-        time: i === 0 ? 'Now' : formatHourDisplay(hourNum, false),
-        temp: i === 0 && weather ? Math.round(baseTemp) : Math.round(h.temperature),
-        iconType,
-        rainChance: typeof h.rainProbability === 'number' && h.rainProbability > 0 ? h.rainProbability : undefined,
-        hour: hourNum,
-      };
+  // If cached live forecast no longer contains the required upcoming window, refresh
+  useEffect(() => {
+    if (!rawHourlyForecast || rawHourlyForecast.length === 0) return;
+    const currentEpoch = Math.floor(Date.now() / 1000);
+    const hasEnoughHours = rawHourlyForecast.some((h, idx) => {
+      if (typeof h.time_epoch === 'number' && h.time_epoch >= currentEpoch) {
+        return idx + 7 < rawHourlyForecast.length;
+      }
+      return false;
     });
-  }, [weather, rawHourlyForecast, currentLocalHour, targetTimezone, selectedLocation?.id]);
+
+    if (!hasEnoughHours && context?.refresh && !isRefreshingRef.current) {
+      isRefreshingRef.current = true;
+      context.refresh();
+      const timer = setTimeout(() => {
+        isRefreshingRef.current = false;
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [rawHourlyForecast, context]);
 
   const renderIcon = (type: HourlySlot['iconType']) => {
     switch (type) {

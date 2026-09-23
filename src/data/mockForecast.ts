@@ -1,5 +1,4 @@
 import type { CurrentWeather, ForecastDay, HourlyForecast } from '../types/weather';
-import { getLocalTimeInfo, formatHourDisplay, resolveLocationTimezone } from '../utils/timezone';
 
 /**
  * Mock 3-day forecast data keyed by location ID.
@@ -37,9 +36,11 @@ export const mockForecastData: Record<string, ForecastDay[]> = {
   ],
 };
 
+import { resolveLocationTimezone, getBaseEpochForLocalHour, formatEpochToLocalHour } from '../utils/timezone';
+
 /**
- * Dynamically generates 24 consecutive hours of forecast starting from the location's
- * current local hour ("Now"), matching location timezone and meteorological characteristics.
+ * Dynamically generates 48 consecutive hours of forecast starting from the location's
+ * current local hour, matching location timezone, time_epoch, and meteorological characteristics.
  */
 export function generateMockHourlyForecast(
   locationId: string = 'new-delhi',
@@ -47,7 +48,7 @@ export function generateMockHourlyForecast(
   baseWeather?: CurrentWeather | null
 ): HourlyForecast[] {
   const timezone = resolveLocationTimezone(locationId, explicitTimezone || baseWeather?.timezone);
-  const { hour: currentHour, dateStr } = getLocalTimeInfo(timezone);
+  const baseEpoch = getBaseEpochForLocalHour(timezone);
   const locKey = locationId.toLowerCase().replace(/\s+/g, '-');
   const forecastDays = mockForecastData[locKey] || mockForecastData['new-delhi'];
   const todayForecast = forecastDays?.[0];
@@ -69,18 +70,16 @@ export function generateMockHourlyForecast(
 
   const hourly: HourlyForecast[] = [];
 
-  for (let offset = 0; offset < 24; offset++) {
-    const rawHour = currentHour + offset;
-    const hour = rawHour % 24;
+  for (let offset = 0; offset < 48; offset++) {
+    const itemEpoch = baseEpoch + offset * 3600;
+    const { hour, displayTime, dateStr: itemDateStr, isDaytime } = formatEpochToLocalHour(itemEpoch, timezone);
     const isNow = offset === 0;
-    const timeLabel = formatHourDisplay(hour, isNow);
-    const isDay = hour >= 6 && hour < 19;
 
     // Daily diurnal temperature curve: low at 5 AM, peak at 3 PM (15:00)
-    const isNextDay = rawHour >= 24;
+    const isNextDay = offset >= 24;
     const activeHigh = isNextDay ? (tomorrowForecast?.high ?? baseHigh) : baseHigh;
     const activeLow = isNextDay ? (tomorrowForecast?.low ?? baseLow) : baseLow;
-    
+
     // Sinusoidal factor: 0 at 9 AM, 1 at 3 PM (15), 0 at 9 PM (21), -1 at 3 AM (03)
     const diurnalFactor = Math.sin(((hour - 9) / 24) * 2 * Math.PI);
     const midTemp = (activeHigh + activeLow) / 2;
@@ -106,12 +105,12 @@ export function generateMockHourlyForecast(
         icon = 'cloud-lightning';
         rainProb = 75;
       } else {
-        mainCondition = isDay ? 'Cloudy' : 'Cloudy';
-        icon = isDay ? 'cloud' : 'cloud';
+        mainCondition = 'Cloudy';
+        icon = 'cloud';
         rainProb = 35;
       }
     } else if (locType === 'sunny') {
-      if (isDay) {
+      if (isDaytime) {
         mainCondition = 'Sunny';
         icon = 'sun';
       } else {
@@ -120,7 +119,7 @@ export function generateMockHourlyForecast(
       }
       rainProb = 5;
     } else if (locType === 'mild') {
-      if (isDay) {
+      if (isDaytime) {
         mainCondition = hour >= 11 && hour <= 16 ? 'Partly Cloudy' : 'Cloudy';
         icon = hour >= 11 && hour <= 16 ? 'cloud-sun' : 'cloud';
       } else {
@@ -130,7 +129,7 @@ export function generateMockHourlyForecast(
       rainProb = hour >= 14 && hour <= 19 ? 55 : 25;
     } else {
       // Default / partly cloudy
-      if (isDay) {
+      if (isDaytime) {
         mainCondition = 'Partly Cloudy';
         icon = 'cloud-sun';
         rainProb = 20;
@@ -142,7 +141,8 @@ export function generateMockHourlyForecast(
     }
 
     hourly.push({
-      time: timeLabel,
+      time: displayTime,
+      time_epoch: itemEpoch,
       temperature: computedTemp,
       condition: {
         main: mainCondition,
@@ -151,8 +151,8 @@ export function generateMockHourlyForecast(
       },
       rainProbability: rainProb,
       hour,
-      date: dateStr,
-      isDay,
+      date: itemDateStr,
+      isDay: isDaytime,
     });
   }
 

@@ -43,6 +43,7 @@ export interface HourlyForecast {
   hour?: number;
   date?: string;
   isDay?: boolean;
+  time_epoch?: number;
 }
 
 export type RiskLevel = 'low' | 'moderate' | 'high' | 'severe';

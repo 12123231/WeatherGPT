@@ -480,31 +480,6 @@ function resolveTimezone(locationId?: string): string {
   return LOCATION_TIMEZONE_MAP[clean] || LOCATION_TIMEZONE_MAP[locationId.toLowerCase().trim()] || 'Asia/Kolkata';
 }
 
-function getLocalHour(timezone: string = 'Asia/Kolkata'): { hour: number; dateStr: string } {
-  try {
-    const formatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
-    const parts = formatter.formatToParts(new Date());
-    const year = parts.find((p) => p.type === 'year')?.value || '';
-    const month = parts.find((p) => p.type === 'month')?.value || '';
-    const day = parts.find((p) => p.type === 'day')?.value || '';
-    const hourStr = parts.find((p) => p.type === 'hour')?.value || '0';
-    let hour = parseInt(hourStr, 10);
-    if (hour === 24) hour = 0;
-    return { hour, dateStr: `${year}-${month}-${day}` };
-  } catch {
-    const now = new Date();
-    return { hour: now.getHours(), dateStr: now.toISOString().split('T')[0] };
-  }
-}
-
 function formatHour(hour: number, isNow: boolean): string {
   if (isNow) return 'Now';
   const h = ((hour % 24) + 24) % 24;
@@ -514,13 +489,31 @@ function formatHour(hour: number, isNow: boolean): string {
   return `${h} AM`;
 }
 
+function getBaseEpoch(timezone: string = 'Asia/Kolkata'): number {
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      minute: 'numeric',
+      second: 'numeric',
+    });
+    const parts = formatter.formatToParts(now);
+    const minute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
+    const second = parseInt(parts.find((p) => p.type === 'second')?.value || '0', 10);
+    return Math.floor(now.getTime() / 1000) - (minute * 60 + second);
+  } catch {
+    const epochSec = Math.floor(Date.now() / 1000);
+    return epochSec - (epochSec % 3600);
+  }
+}
+
 export function generateMockHourlyForecast(
   locationId: string = 'new-delhi',
   explicitTimezone?: string,
   baseWeather?: CurrentWeather | null
 ): HourlyForecast[] {
   const timezone = explicitTimezone || resolveTimezone(locationId);
-  const { hour: currentHour, dateStr } = getLocalHour(timezone);
+  const baseEpoch = getBaseEpoch(timezone);
   const locKey = locationId.toLowerCase().replace(/\s+/g, '-');
   const forecastDays = mockForecastData[locKey] || mockForecastData['new-delhi'];
   const todayForecast = forecastDays?.[0];
@@ -542,14 +535,26 @@ export function generateMockHourlyForecast(
 
   const hourly: HourlyForecast[] = [];
 
-  for (let offset = 0; offset < 24; offset++) {
-    const rawHour = currentHour + offset;
-    const hour = rawHour % 24;
-    const isNow = offset === 0;
-    const timeLabel = formatHour(hour, isNow);
-    const isDay = hour >= 6 && hour < 19;
+  for (let offset = 0; offset < 48; offset++) {
+    const itemEpoch = baseEpoch + offset * 3600;
+    const d = new Date(itemEpoch * 1000);
+    let hour = 0;
+    let itemDateStr = '';
+    let timeLabel = '';
+    try {
+      hour = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', hour12: false }).format(d), 10) % 24;
+      itemDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+      timeLabel = new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', hour12: true }).format(d);
+    } catch {
+      hour = (d.getHours() + offset) % 24;
+      itemDateStr = d.toISOString().split('T')[0];
+      timeLabel = formatHour(hour, offset === 0);
+    }
 
-    const isNextDay = rawHour >= 24;
+    const isDay = hour >= 6 && hour < 19;
+    const isNow = offset === 0;
+
+    const isNextDay = offset >= 24;
     const activeHigh = isNextDay ? (tomorrowForecast?.high ?? baseHigh) : baseHigh;
     const activeLow = isNextDay ? (tomorrowForecast?.low ?? baseLow) : baseLow;
 
@@ -612,6 +617,7 @@ export function generateMockHourlyForecast(
 
     hourly.push({
       time: timeLabel,
+      time_epoch: itemEpoch,
       temperature: computedTemp,
       condition: {
         main: mainCondition,
@@ -620,7 +626,7 @@ export function generateMockHourlyForecast(
       },
       rainProbability: rainProb,
       hour,
-      date: dateStr,
+      date: itemDateStr,
       isDay,
     });
   }

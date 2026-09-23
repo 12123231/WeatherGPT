@@ -337,35 +337,11 @@ export async function getHourlyForecast(locationQuery: string): Promise<{ data: 
         }
 
         const hourlyList: HourlyForecast[] = [];
-        const currentItem = allHours[startIndex] || allHours[0];
 
-        // Card 0: "Now" represents live current weather for the searched location
-        const currentRainProb = typeof currentItem?.chance_of_rain === 'number'
-          ? currentItem.chance_of_rain
-          : typeof currentItem?.daily_chance_of_rain === 'number'
-          ? currentItem.daily_chance_of_rain
-          : (currentItem?.will_it_rain ? 100 : 0);
-
-        hourlyList.push({
-          time: 'Now',
-          temperature: Math.round(json.current.temp_c),
-          condition: {
-            main: json.current.condition?.text || 'Clear',
-            description: json.current.condition?.text || '',
-            icon: mapWeatherApiConditionToIcon(json.current.condition?.text || ''),
-          },
-          rainProbability: currentRainProb,
-          precipitation: typeof currentItem?.precip_mm === 'number' ? currentItem.precip_mm : (typeof json.current?.precip_mm === 'number' ? json.current.precip_mm : 0),
-          hour: currentHour,
-          date: currentItem?.time ? currentItem.time.split(' ')[0] : localDateStr,
-          isDay: json.current.is_day === 1,
-        });
-
-        // Following cards: next upcoming consecutive hours (startIndex + 1, startIndex + 2, ...)
-        // Take up to 23 following hours (total 24 hours available)
-        for (let offset = 1; offset < 24 && (startIndex + offset) < allHours.length; offset++) {
-          const item = allHours[startIndex + offset];
-          let hourNum = (currentHour + offset) % 24;
+        // Return all upcoming consecutive hours starting from startIndex across the 3-day forecast
+        for (let i = startIndex; i < allHours.length; i++) {
+          const item = allHours[i];
+          let hourNum = 0;
           let dateStr = '';
           if (item.time) {
             const parts = item.time.split(' ');
@@ -395,6 +371,7 @@ export async function getHourlyForecast(locationQuery: string): Promise<{ data: 
 
           hourlyList.push({
             time: timeLabel,
+            time_epoch: item.time_epoch,
             temperature: Math.round(item.temp_c),
             condition: {
               main: item.condition?.text || 'Clear',

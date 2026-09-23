@@ -131,3 +131,102 @@ export function formatHourDisplay(hour: number, isCurrentHour: boolean = false):
   if (normalizedHour > 12) return `${normalizedHour - 12} PM`;
   return `${normalizedHour} AM`;
 }
+
+/**
+ * Gets the Unix epoch (in seconds) corresponding to the start of the current local hour (:00:00)
+ * in the specified timezone.
+ */
+export function getBaseEpochForLocalHour(timezone: string = 'Asia/Kolkata', date: Date = new Date()): number {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      minute: 'numeric',
+      second: 'numeric',
+    });
+    const parts = formatter.formatToParts(date);
+    const minute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
+    const second = parseInt(parts.find((p) => p.type === 'second')?.value || '0', 10);
+    return Math.floor(date.getTime() / 1000) - (minute * 60 + second);
+  } catch {
+    const epochSec = Math.floor(date.getTime() / 1000);
+    return epochSec - (epochSec % 3600);
+  }
+}
+
+/**
+ * Derives the local display hour (e.g. "10 AM", "12 PM"), 0-23 numeric hour,
+ * local date string (YYYY-MM-DD), and day/night status from a Unix timestamp (seconds)
+ * using the target location's IANA timezone.
+ */
+export function formatEpochToLocalHour(
+  timeEpoch: number,
+  timezone: string = 'Asia/Kolkata'
+): {
+  hour: number;
+  displayTime: string;
+  dateStr: string;
+  isDaytime: boolean;
+} {
+  const date = new Date(timeEpoch * 1000);
+  try {
+    const hourFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      hour12: true,
+    });
+    const displayTime = hourFormatter.format(date);
+
+    const hour24Formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      hour12: false,
+    });
+    let hour = parseInt(hour24Formatter.format(date), 10);
+    if (hour === 24) hour = 0;
+
+    const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const dateStr = dateFormatter.format(date);
+    const isDaytime = hour >= 6 && hour < 19;
+
+    return { hour, displayTime, dateStr, isDaytime };
+  } catch {
+    const h = date.getHours();
+    return {
+      hour: h,
+      displayTime: formatHourDisplay(h),
+      dateStr: date.toISOString().split('T')[0],
+      isDaytime: h >= 6 && h < 19,
+    };
+  }
+}
+
+/**
+ * Calculates the exact remaining milliseconds until the next local hour boundary
+ * (:00:00.000) in the specified timezone without clock drift.
+ */
+export function getMsUntilNextHour(timezone: string = 'Asia/Kolkata', date: Date = new Date()): number {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      minute: 'numeric',
+      second: 'numeric',
+    });
+    const parts = formatter.formatToParts(date);
+    const minute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
+    const second = parseInt(parts.find((p) => p.type === 'second')?.value || '0', 10);
+    const ms = date.getMilliseconds();
+    const remainingSeconds = (59 - minute) * 60 + (59 - second);
+    return Math.max(50, remainingSeconds * 1000 + (1000 - ms));
+  } catch {
+    const ms = date.getMilliseconds();
+    const sec = date.getSeconds();
+    const min = date.getMinutes();
+    const remainingSeconds = (59 - min) * 60 + (59 - sec);
+    return Math.max(50, remainingSeconds * 1000 + (1000 - ms));
+  }
+}
